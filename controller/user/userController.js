@@ -1,0 +1,175 @@
+const express = require('express');
+const User = require('../../models/userSchema');
+const bcrypt = require('bcrypt');
+const router = express.Router();
+const nodemailer = require('nodemailer');
+
+function generateOtp() {
+    const otp = Math.floor(100000 + Math.random() * 900000);
+    return otp;
+}
+
+async function sendEmail(email, otp) {
+    try {
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                 user: process.env.VERIFY_EMAIL,
+                pass: process.env.VERIFY_PASSWORD
+            }
+        });
+
+       const info = await transporter.sendMail({
+            from: process.env.VERIFY_EMAIL,
+            to: email,
+            subject: 'OTP Verification',
+            text: `Your OTP is ${otp}`,
+        });
+        return info.accepted.length > 0;
+    } catch (error) {
+        console.error('Error sending email:', error);
+        return false;
+        
+    }
+}
+
+
+const loadSignup = (req, res) => {
+    try {
+      
+        return res.render('signup');
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Internal server error' });
+        
+    }
+}
+
+const signup = async (req, res) => {
+  
+    try {
+        const { name, email, password } = req.body;
+
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            return res.status(400).json({ message: 'Email already exists' });
+        }
+    
+
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        const otp = generateOtp();
+        console.log('Generated OTP:', otp);
+        const emailSent = await sendEmail(email, otp);
+        if (!emailSent) {
+            return res.status(500).json({ success: false, message: 'Failed to send OTP' });
+        }
+
+        req.session.userOtp = otp;
+        req.session.userData = {
+            name,
+            email,
+            password: hashedPassword,
+        };
+
+       res.status(200).json({ success: true, message: 'OTP sent to your email' });
+
+     } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
+const loadVerifyOtp = (req, res) => {
+    try {
+       
+        return res.render('verify-otp');
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+}
+
+const verifyOtp = async (req, res) => {
+    try {
+      
+        const {otp} = req.body;
+        
+        if (!otp) {
+            return res.status(400).json({success: false, message: 'OTP is required' });
+        }
+
+        if (String(otp) !== String(req.session.userOtp)) {
+            return res.status(400).json({ success: false, message: 'Invalid OTP' });
+        }
+
+        const userData = req.session.userData;
+        const newUser = new User(userData);
+        await newUser.save();
+
+        req.session.userOtp = null;
+        req.session.userData = null;
+
+        res.status(200).json({ success: true, message: 'Signup successful' });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Internal server error' });
+        
+    }
+}
+
+const loadLogin = (req, res) => {
+    try {
+        console.log("Login page loaded");
+        return res.render('login');
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+}
+
+
+
+const login = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(400).json({ message: 'Invalid email' });
+        }
+
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            return res.status(400).json({ message: 'Invalid password' });
+        }
+
+        res.status(200).json({ success: true, message: 'Login successful' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
+
+const loadHome = (req, res) => {
+    try {
+        console.log("Home page loaded");
+        return res.render('home');
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+}
+
+module.exports = {
+    loadSignup,
+    signup,
+    loadLogin,
+    login,
+    verifyOtp,
+    loadVerifyOtp,
+    loadHome
+};

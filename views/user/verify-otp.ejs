@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <title>OTP Verification - My Cinemas</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #1c2526;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            background-color: white;
+            padding: 30px; /* Increased padding for more space inside the container */
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            width: 300px;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .otp-input {
+            width: 90%; /* Reduced width to avoid touching the border */
+            padding: 10px;
+            margin: 10px auto; /* Centered with auto margin */
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+            display: block; /* Ensures the input behaves as a block element */
+        }
+        .verify-btn {
+            width: 90%; /* Match the input width for consistency */
+            padding: 10px;
+            background-color: #f5c518;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+            cursor: pointer;
+            margin: 0 auto; /* Center the button */
+            display: block; /* Ensures the button behaves as a block element */
+        }
+        .verify-btn:hover {
+            background-color: #e0b415;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">MY CINEMAS</div>
+        <form action="/verify-otp" method="POST" id="otp-form">
+            <input type="text" class="otp-input" name="otp" placeholder="Enter OTP" >
+            <button type="submit" class="verify-btn">VERIFY</button>
+        </form>
+    </div>
+
+    <script>
+
+        async function validateForm(e){
+            e.preventDefault();
+
+            const form = document.getElementById('otp-form');
+
+            try {
+                const response = await fetch('/verify-otp',{
+                    method:'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        otp: form.otp.value
+                    })
+                })
+
+                const data = await response.json();
+                if(data.success&&response.ok){
+                    Swal.fire({
+                        icon:"success",
+                        title:"Success",
+                        text:data.message,
+                        showConfirmButton: false,
+                        timer: 1500
+                    }).then(()=>{
+                        window.location.href = '/';
+                    })
+                }else{
+                    Swal.fire({
+                        icon:"error",
+                        title:"Error",
+                        text:data.message||"An error occurred while processing your request.error",
+                        showConfirmButton: false,
+                        timer: 1500
+                    })
+                }
+                
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon:"error",
+                    title:"Error",
+                    text:"An error occurred while processing your request.",
+                    showConfirmButton: false,
+                    timer: 1500
+                })
+                
+            }
+
+
+        }
+        const form = document.getElementById('otp-form');
+        form.addEventListener('submit', validateForm);
+
+    </script>
+</body>
+</html>

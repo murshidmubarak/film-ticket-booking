@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <title>Sign Up - My Cinemas</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #333;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        .container {
+            text-align: center;
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+            background: #fff;
+            z-index: 1;
+            box-sizing: border-box;
+        }
+        .header {
+            background: #333;
+            padding: 20px;
+            margin-bottom: 20px;
+            width: 100%;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+        .logo {
+            color: #fff;
+            font-size: 36px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            white-space: nowrap;
+        }
+        .logo small {
+            font-size: 14px;
+            font-weight: normal;
+            display: block;
+            white-space: nowrap;
+        }
+        .form-group {
+            margin-bottom: 15px;
+            position: relative;
+            width: 100%;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 10px 10px 10px 40px;
+            border: 1px solid #ccc;
+            border-radius: 0;
+            border-top: none;
+            border-left: none;
+            border-right: none;
+            font-size: 16px;
+            background-color: #fff;
+            color: #000;
+            box-sizing: border-box;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .form-group i {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+        }
+        .form-group .toggle-password {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #d4af37;
+            font-size: 16px;
+        }
+        .register-btn {
+            background: linear-gradient(to right, #d4af37, #f5d9a5);
+            color: #000;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            width: 100%;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            box-sizing: border-box;
+        }
+        .error {
+            color: red;
+            font-size: 12px;
+            text-align: left;
+            display: block;
+            margin-top: 5px;
+        }
+        @media (max-width: 480px) {
+            .container {
+                max-width: 90%;
+                padding: 10px;
+                min-height: 80vh;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            }
+            .header {
+                padding: 10px;
+            }
+            .logo {
+                font-size: 24px;
+                white-space: normal;
+                line-height: 1.2;
+            }
+            .logo small {
+                font-size: 12px;
+            }
+            .form-group input {
+                font-size: 14px;
+                padding: 8px 40px 8px 35px;
+            }
+            .form-group i {
+                left: 8px;
+            }
+            .form-group .toggle-password {
+                right: 8px;
+                font-size: 14px;
+            }
+            .register-btn {
+                font-size: 16px;
+                padding: 8px;
+            }
+            .error {
+                font-size: 10px;
+            }
+        }
+        @media (max-width: 360px) {
+            .logo {
+                font-size: 20px;
+            }
+            .logo small {
+                font-size: 10px;
+            }
+            .form-group input {
+                font-size: 12px;
+                padding: 6px 35px 6px 30px;
+            }
+            .form-group i {
+                left: 6px;
+            }
+            .form-group .toggle-password {
+                right: 6px;
+                font-size: 12px;
+            }
+            .register-btn {
+                font-size: 14px;
+                padding: 6px;
+            }
+            .error {
+                font-size: 9px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">
+                MY CINEMAS<br>
+                <small>POOKOTTUMPADAM</small>
+            </div>
+        </div>
+        <form action="/signup" method="POST" id="signupForm">
+            <div class="form-group">
+                <i>👤</i>
+                <input type="text" name="name" placeholder="Name" id="name">
+            </div>
+            <div class="form-group">
+                <i>📧</i>
+                <input type="email" name="email" placeholder="Email" id="email">
+            </div>
+            <div class="form-group">
+                <i>🔒</i>
+                <input type="password" name="password" id="password" placeholder="Password">
+                <span class="toggle-password" onclick="togglePassword('password')">👁️</span>
+            </div>
+            <div class="form-group">
+                <i>🔒</i>
+                <input type="password" name="confirmPassword" id="confirmPassword" placeholder="Confirm Password">
+                <span class="toggle-password" onclick="togglePassword('confirmPassword')">👁️</span>
+            </div>
+            <button type="submit" class="register-btn">REGISTER</button>
+        </form>
+    </div>
+    <script>
+        function togglePassword(fieldId) {
+            const passwordInput = document.getElementById(fieldId);
+            const toggleIcon = passwordInput.nextElementSibling;
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.textContent = '👁️‍🗨️';
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.textContent = '👁️';
+            }
+        }
+
+      async function validateForm(e) {
+  e.preventDefault();
+
+  const nameInput = document.getElementById('name');
+  const emailInput = document.getElementById('email');
+  const passwordInput = document.getElementById('password');
+  const confirmPasswordInput = document.getElementById('confirmPassword');
+
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const passwordPattern = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
+
+  // Remove existing error messages
+  document.querySelectorAll('.error').forEach(error => error.remove());
+
+  let isValid = true;
+
+  // Validate name
+  if (!nameInput.value.trim()) {
+    const error = document.createElement('span');
+    error.className = 'error';
+    error.innerText = 'Name is required';
+    nameInput.parentElement.appendChild(error);
+    isValid = false;
+  }
+
+  // Validate email
+  if (!emailInput.value.trim()) {
+    const error = document.createElement('span');
+    error.className = 'error';
+    error.innerText = 'Email is required';
+    emailInput.parentElement.appendChild(error);
+    isValid = false;
+  } else if (!emailPattern.test(emailInput.value.trim())) {
+    const error = document.createElement('span');
+    error.className = 'error';
+    error.innerText = 'Invalid email format';
+    emailInput.parentElement.appendChild(error);
+    isValid = false;
+  }
+
+  // Validate password
+  if (!passwordInput.value.trim()) {
+    const error = document.createElement('span');
+    error.className = 'error';
+    error.innerText = 'Password is required';
+    passwordInput.parentElement.appendChild(error);
+    isValid = false;
+  } else if (!passwordPattern.test(passwordInput.value.trim())) {
+    const error = document.createElement('span');
+    error.className = 'error';
+    error.innerText = 'Password must be at least 8 characters long and contain at least one letter and one number';
+    passwordInput.parentElement.appendChild(error);
+    isValid = false;
+  }
+
+  // Validate confirm password
+  if (!confirmPasswordInput.value.trim()) {
+    const error = document.createElement('span');
+    error.className = 'error';
+    error.innerText = 'Confirm password is required';
+    confirmPasswordInput.parentElement.appendChild(error);
+    isValid = false;
+  } else if (passwordInput.value.trim() !== confirmPasswordInput.value.trim()) {
+    const error = document.createElement('span');
+    error.className = 'error';
+    error.innerText = 'Passwords do not match';
+    confirmPasswordInput.parentElement.appendChild(error);
+    isValid = false;
+  }
+
+  // If form is valid, send data to server
+  if (isValid) {
+    try {
+      const response = await fetch('/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: nameInput.value.trim(),
+          email: emailInput.value.trim(),
+          password: passwordInput.value.trim()
+        })
+      });
+
+      const result = await response.json(); // Parse JSON regardless of status
+
+      if (response.ok && result.success) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Success',
+          text: result.message, // Use backend-provided message
+          timer: 3000,
+          showConfirmButton: false
+        }).then(() => {
+          window.location.href = '/verify-otp'; // Redirect to verify page
+        });
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: result.message || 'Signup failed. Please try again.', // Fallback message
+        });
+      }
+    } catch (error) {
+      console.error('Error during signup:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Network error occurred. Please check your connection and try again.',
+      });
+    }
+  }
+}
+        const form = document.getElementById('signupForm');
+        form.addEventListener('submit', validateForm);
+    </script>
+</body>
+</html>
