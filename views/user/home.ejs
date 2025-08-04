@@ -28,6 +28,7 @@
 
         .logo img {
             height: 40px;
+            max-width: 100%;
         }
 
         .menu-button {
@@ -76,13 +77,15 @@
             flex-wrap: wrap;
             padding: 10px;
             gap: 10px;
+            justify-content: center;
         }
 
         .movie-card {
             background-color: white;
             border-radius: 5px;
             overflow: hidden;
-            width: calc(50% - 5px);
+            width: calc(100% - 20px);
+            max-width: 300px;
             margin-bottom: 10px;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
@@ -92,6 +95,12 @@
             height: 200px;
             background-color: #ddd;
             position: relative;
+        }
+
+        .movie-poster img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
         .movie-rating {
@@ -141,8 +150,9 @@
         .sidebar {
             position: fixed;
             top: 0;
-            left: -250px;
-            width: 250px;
+            left: -100%;
+            width: 80%;
+            max-width: 250px;
             height: 100%;
             background-color: white;
             transition: left 0.3s ease;
@@ -237,6 +247,55 @@
             text-align: center;
             color: white;
         }
+
+        /* Hidden class for tab content */
+        .movies-container.hidden {
+            display: none;
+        }
+
+        /* Responsive adjustments */
+        @media (min-width: 768px) {
+            .movie-card {
+                width: calc(50% - 10px);
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .movie-card {
+                width: calc(33.33% - 10px);
+            }
+
+            .movies-container {
+                padding: 20px;
+                gap: 20px;
+            }
+
+            .header {
+                padding: 15px 40px;
+            }
+
+            .logo img {
+                height: 50px;
+            }
+        }
+
+        @media (max-width: 767px) {
+            .tabs {
+                font-size: 14px;
+            }
+
+            .theater-info {
+                font-size: 12px;
+            }
+
+            .movie-title {
+                font-size: 14px;
+            }
+
+            .movie-language {
+                font-size: 12px;
+            }
+        }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
@@ -288,51 +347,69 @@
     </div>
 
     <div class="tabs">
-        <div class="tab active">NOW RUNNING</div>
-        <div class="tab">UPCOMING</div>
+        <div class="tab active" data-status="Running">NOW RUNNING</div>
+        <div class="tab" data-status="Upcoming">UPCOMING</div>
     </div>
 
     <div class="theater-info" style="background-color: #666; color: white; padding: 10px; white-space: nowrap; overflow-x: auto;">
         MY CINEMAS A/C 4K DOLBY ATMOS : WISHING YOU A BETTER EXPERIENCE
     </div>
 
-    <div class="movies-container">
-        <!-- Movie Card 1 -->
-        <div class="movie-card">
-            <div class="movie-poster">
-                <!-- Movie poster will go here -->
-                <div class="movie-rating">9.4</div>
-            </div>
-            <div class="movie-info">
-                <div class="movie-title">THUDARUM</div>
-                <div class="movie-language">MALAYALAM</div>
-                <button class="book-button">BOOK</button>
-            </div>
-        </div>
+    <!-- Now Running Movies Container -->
+    <div class="movies-container" id="running-movies">
+    <% const runningMovies = products.filter(product => product.status === 'Running'); %>
 
-        <!-- Movie Card 2 -->
-        <div class="movie-card">
-            <div class="movie-poster">
-                <!-- Movie poster will go here -->
+    <% if (runningMovies.length > 0) { %>
+        <% runningMovies.forEach(product => { %>
+            <div class="movie-card">
+                <div class="movie-poster">
+                    <% if (product.images && product.images.length > 0) { %>
+                        <img src="/<%= product.images[0] %>" alt="<%= product.name %> poster" />
+                    <% } else { %>
+                        <div class="no-image">No Image</div>
+                    <% } %>
+                    <div class="movie-rating">★</div>
+                </div>
+                <div class="movie-info">
+                    <div class="movie-title"><%= product.name %></div>
+                    <div class="movie-language"><%= product.language %></div>
+                    <button class="book-button">BOOK</button>
+                </div>
             </div>
-            <div class="movie-info">
-                <div class="movie-title">PRINCE AND FAMILY</div>
-                <div class="movie-language">MALAYALAM</div>
-                <button class="book-button">BOOK</button>
-            </div>
-        </div>
+        <% }) %>
+    <% } else { %>
+        <div class="no-movies">No movies currently running.</div>
+    <% } %>
+</div>
 
-        <!-- Movie Card 3 -->
-        <div class="movie-card">
-            <div class="movie-poster">
-                <!-- Movie poster will go here -->
+
+    <!-- Upcoming Movies Container -->
+    <div class="movies-container hidden" id="upcoming-movies">
+        <% 
+        const upcomingMovies = products.filter(product => product.status === 'Upcoming');
+        upcomingMovies.forEach(product => { 
+        %>
+            <div class="movie-card">
+                <div class="movie-poster">
+                    <% if (product.images && product.images.length > 0) { %>
+                        <img src="/<%= product.images[0] %>" alt="<%= product.name %> poster" />
+                    <% } else { %>
+                        <div class="no-image">No Image</div>
+                    <% } %>
+                    <div class="movie-rating">★</div>
+                </div>
+                <div class="movie-info">
+                    <div class="movie-title"><%= product.name %></div>
+                    <div class="movie-language"><%= product.language %> 
+                         <!-- <%= product.description %> -->
+                        </div>
+                    <!-- <button class="book-button">BOOK</button> -->
+                </div>
             </div>
-            <div class="movie-info">
-                <div class="movie-title">PADAKKALAM</div>
-                <div class="movie-language">MALAYALAM</div>
-                <button class="book-button">BOOK</button>
-            </div>
-        </div>
+        <% }); %>
+        <% if (upcomingMovies.length === 0) { %>
+            <div class="no-movies">No upcoming movies.</div>
+        <% } %>
     </div>
 
     <script>
@@ -341,7 +418,11 @@
             const menuButton = document.getElementById('menu-button');
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('sidebar-overlay');
+            const tabs = document.querySelectorAll('.tab');
+            const runningMovies = document.getElementById('running-movies');
+            const upcomingMovies = document.getElementById('upcoming-movies');
 
+            // Sidebar functionality
             menuButton.addEventListener('click', function() {
                 sidebar.classList.add('active');
                 overlay.style.display = 'block';
@@ -351,7 +432,39 @@
                 sidebar.classList.remove('active');
                 overlay.style.display = 'none';
             });
+
+            // Tab switching functionality
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    // Remove active class from all tabs
+                    tabs.forEach(t => t.classList.remove('active'));
+                    
+                    // Add active class to clicked tab
+                    this.classList.add('active');
+                    
+                    // Get the status from data attribute
+                    const status = this.getAttribute('data-status');
+                    
+                    // Show/hide movie containers based on status
+                    if (status === 'Running') {
+                        runningMovies.classList.remove('hidden');
+                        upcomingMovies.classList.add('hidden');
+                    } else if (status === 'Upcoming') {
+                        runningMovies.classList.add('hidden');
+                        upcomingMovies.classList.remove('hidden');
+                    }
+                });
+            });
         });
+
+        // Function to handle movie booking
+        function bookMovie(link) {
+            if (link) {
+                window.open(link, '_blank');
+            } else {
+                alert('Booking link not available');
+            }
+        }
     </script>
 </body>
 </html>

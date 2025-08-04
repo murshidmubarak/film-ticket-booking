@@ -3,6 +3,8 @@ const User = require('../../models/userSchema');
 const bcrypt = require('bcrypt');
 const router = express.Router();
 const nodemailer = require('nodemailer');
+const Product = require('../../models/productSchema'); // Assuming you have a Product model
+const session = require('express-session');
 
 function generateOtp() {
     const otp = Math.floor(100000 + Math.random() * 900000);
@@ -154,15 +156,19 @@ const login = async (req, res) => {
 };
 
 
-const loadHome = (req, res) => {
+const loadHome = async (req, res) => {
     try {
         console.log("Home page loaded");
-        return res.render('home');
+        const user = req.session.user;
+
+        const products = await Product.find({});
+        return res.render('home', { products, user });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Internal server error' });
     }
 }
+
 
 module.exports = {
     loadSignup,

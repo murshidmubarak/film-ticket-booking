@@ -1,23 +1,21 @@
-
 const multer = require('multer');
-const path = require('path'); // Mandatory: For file extension
-const fs = require('fs'); // Mandatory: For directory check
+const path = require('path');
+const fs = require('fs');
 
-// Set uploads folder inside public/
-const uploadDir = 'public/'; // Changed to public/
+// Save to public/uploads/
+const uploadDir = 'public/uploads';
 if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true }); // Create public/uploads/ if not exist
+    fs.mkdirSync(uploadDir, { recursive: true });
 }
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, uploadDir); // Save files in public/uploads/ folder
+        cb(null, uploadDir);
     },
     filename: function (req, file, cb) {
-        const namePrefix = Date.now(); // Timestamp for unique name
-        const ext = path.extname(file.originalname); // Get file extension
-        const newName = namePrefix + ext; // Fixed typo: namePrefixes to namePrefix
-        cb(null, newName);
+        const ext = path.extname(file.originalname);
+        const filename = Date.now() + ext;
+        cb(null, filename);
     }
 });
 

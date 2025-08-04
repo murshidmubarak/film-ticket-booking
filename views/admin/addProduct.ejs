@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Add Product - Admin Dashboard</title>
@@ -9,6 +12,71 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+        }
+        .image-cropper {
+            display: none;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .cropper-container {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto 20px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #f9fafb;
+        }
+
+        #imageToCrop {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        #cropButton,
+        #cancelCrop {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        #cropButton {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+        }
+
+        #cropButton:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+        }
+
+        #cancelCrop {
+            background: #f3f4f6;
+            color: #374151;
+            border: 2px solid #e5e7eb;
+        }
+
+        #cancelCrop:hover {
+            background: #e5e7eb;
+            transform: translateY(-1px);
+        }
+
+        #images-error {
+            text-align: center;
+            margin-top: 10px;
+            color: #ef4444;
         }
 
         body {
@@ -105,6 +173,8 @@
             background: #f9fafb;
             transition: all 0.3s ease;
             position: relative;
+            /* CHANGED: Added min-height to ensure container holds all content */
+            min-height: 200px;
         }
 
         .image-upload-container:hover {
@@ -137,6 +207,10 @@
             background: white;
             width: 100%;
             max-width: 300px;
+            /* CHANGED: Ensure input stays within container */
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         .btn-group {
@@ -171,6 +245,13 @@
             box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
         }
 
+        .btn-primary:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
         .btn-secondary {
             background: #f3f4f6;
             color: #374151;
@@ -187,7 +268,9 @@
             font-size: 12px;
             margin-top: 8px;
             font-weight: 500;
-            text-align: left;
+            text-align: center;
+            /* CHANGED: Ensure error stays within container */
+            display: block;
         }
 
         @media (max-width: 768px) {
@@ -253,31 +336,61 @@
         </div>
 
         <div class="form-container">
-            <form action="/admin/products" method="POST" enctype="multipart/form-data" id="addProductForm">
+            <form action="/admin/addProduct" method="POST" enctype="multipart/form-data" id="addProductForm">
                 <div class="form-grid">
                     <div class="form-group">
                         <label class="form-label" for="productName">Product Name</label>
-                        <input type="text" id="productName" name="productName" class="form-input" placeholder="Enter product name">
+                        <input type="text" id="productName" name="productName" class="form-input" placeholder="Enter product name" aria-label="Product name">
                     </div>
                     
                     <div class="form-group">
                         <label class="form-label" for="productPrice">Price</label>
-                        <input type="number" id="productPrice" name="productPrice" class="form-input" placeholder="0.00" step="0.01" min="0" >
+                        <input type="number" id="productPrice" name="productPrice" class="form-input" placeholder="0.00" step="0.01" min="0" aria-label="Product price">
                     </div>
                 </div>
 
                 <div class="form-group full-width">
                     <label class="form-label" for="productDescription">Description</label>
-                    <textarea id="productDescription" name="productDescription" class="form-input form-textarea" placeholder="Enter detailed product description..."></textarea>
+                    <textarea id="productDescription" name="productDescription" class="form-input form-textarea" placeholder="Enter detailed product description..." aria-label="Product description"></textarea>
                 </div>
+
+                <div class="form-group">
+        <label class="form-label" for="productStatus">Status</label>
+        <select id="productStatus" name="productStatus" class="form-input" aria-label="Product status">
+            <option value="" disabled selected>Select status</option>
+            <option value="Running">Running</option>
+            <option value="Upcoming">Upcoming</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label class="form-label" for="productLanguage">Language</label>
+        <input type="text" id="productLanguage" name="productLanguage" class="form-input" placeholder="Enter language" aria-label="Product language">
+    </div>
+
+    <div class="form-group full-width">
+        <label class="form-label" for="productLink">Product Link</label>
+        <input type="url" id="productLink" name="productLink" class="form-input" placeholder="https://example.com" aria-label="Product link">
+    </div>
+</div>
 
                 <div class="form-group full-width">
                     <label class="form-label">Product Image</label>
-                    <div class="image-upload-container">
+                    <div class="image-upload-container" id="imageUploadContainer">
+                        <!-- CHANGED: Moved error message inside container -->
+                        <div id="images-error" class="error-message"></div>
+                        <div id="cropperContainer" class="image-cropper">
+                            <div class="cropper-container">
+                                <img id="imageToCrop" src="" alt="Image to crop">
+                            </div>
+                            <button type="button" id="cropButton" class="btn" aria-label="Crop and add image">Crop & Add</button>
+                            <button type="button" id="cancelCrop" class="btn" aria-label="Cancel image cropping">Cancel</button>
+                        </div>
                         <div class="upload-icon">📷</div>
                         <div class="upload-text">Select Product Image</div>
                         <div class="upload-subtext">PNG, JPG, GIF files supported</div>
-                        <input type="file" id="productImage" name="productImage" accept="image/*" class="file-input">
+                        <!-- CHANGED: Ensured input stays within container -->
+                        <input type="file" id="productImage" name="productImage" accept="image/png, image/jpeg, image/jpg" class="file-input" multiple aria-label="Upload product images">
                     </div>
                 </div>
 
@@ -290,25 +403,147 @@
     </main>
 
     <script>
+        let cropper;
+        const croppedImages = new Map();
+        const imageUploadContainer = document.getElementById('imageUploadContainer');
+        const productImageInput = document.getElementById('productImage');
+        const cropperContainer = document.getElementById('cropperContainer');
+        const imageToCrop = document.getElementById('imageToCrop');
+        const cropButton = document.getElementById('cropButton');
+        const cancelCrop = document.getElementById('cancelCrop');
+        const imagesError = document.getElementById('images-error');
+        const maxImages = 4;
+        const minImages = 1;
 
-        
+        productImageInput.addEventListener("change", (event) => {
+            const files = Array.from(event.target.files);
+            if (files.length > 0) {
+                // if (croppedImages.size + files.length > maxImages) {
+                //     imagesError.textContent = `You can only upload a maximum of ${maxImages} images.`;
+                //     productImageInput.value = '';
+                //     return;
+                // }
 
+                const processFile = (file) => {
+                    if (['image/png', 'image/jpeg', 'image/jpg'].includes(file.type) && file.size <= 5 * 1024 * 1024) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            imageToCrop.src = e.target.result;
+                            imageToCrop.onload = () => {
+                                if (cropper) cropper.destroy();
+                                cropperContainer.style.display = 'block';
+                                cropper = new Cropper(imageToCrop, {
+                                    aspectRatio: 1,
+                                    viewMode: 1,
+                                    autoCropArea: 1,
+                                    ready: () => {
+                                        cropButton.disabled = false;
+                                    }
+                                });
+                            };
+                        };
+                        reader.readAsDataURL(file);
+                    } else {
+                        imagesError.textContent = 'Please upload a valid image (PNG, JPG) under 5MB.';
+                    }
+                };
 
-    
+                files.forEach(processFile);
+                productImageInput.value = '';
+            }
+        });
 
+        cropButton.addEventListener('click', () => {
+            if (cropper) {
+                const canvas = cropper.getCroppedCanvas({ width: 300, height: 300 });
+                canvas.toBlob((blob) => {
+                    if (blob) {
+                        const fileName = `cropped_${Date.now()}.png`;
+                        const file = new File([blob], fileName, { type: 'image/png' });
 
-        document.getElementById('addProductForm').addEventListener('submit', function(event) {
-            event.preventDefault(); // Prevent form submission for validation
+                        if (croppedImages.size >= maxImages) {
+                            imagesError.textContent = `You can only upload a maximum of ${maxImages} images.`;
+                            return;
+                        }
 
-            // Remove existing error messages
+                        imagesError.textContent = '';
+                        croppedImages.set(fileName, blob);
+
+                        const imgElement = document.createElement('img');
+                        imgElement.src = URL.createObjectURL(blob);
+                        imgElement.alt = fileName;
+                        imgElement.style.width = '100px';
+                        imgElement.style.height = '100px';
+                        imgElement.style.objectFit = 'cover';
+                        imgElement.style.marginRight = '10px';
+                        imgElement.style.cursor = 'pointer';
+                        imageUploadContainer.appendChild(imgElement);
+
+                        cropper.destroy();
+                        cropperContainer.style.display = 'none';
+                        productImageInput.value = '';
+                    }
+                });
+            }
+        });
+
+        cancelCrop.addEventListener('click', () => {
+            if (cropper) cropper.destroy();
+            cropperContainer.style.display = 'none';
+            productImageInput.value = '';
+        });
+
+        imageUploadContainer.addEventListener('click', (e) => {
+            if (e.target.tagName === 'IMG') {
+                const fileName = e.target.alt;
+                croppedImages.delete(fileName);
+                e.target.remove();
+                imagesError.textContent = '';
+            }
+        });
+
+        const addProductForm = document.getElementById('addProductForm');
+        addProductForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            imagesError.textContent = '';
             document.querySelectorAll('.error-message').forEach(error => error.remove());
 
             const productName = document.getElementById('productName').value.trim();
             const productPrice = document.getElementById('productPrice').value.trim();
             const productDescription = document.getElementById('productDescription').value.trim();
-            const productImage = document.getElementById('productImage').files[0];
-
+            const submitButton = document.querySelector('.btn-primary');
+            const productStatus = document.getElementById('productStatus').value;
+            const productLanguage = document.getElementById('productLanguage').value.trim();
+            const productLink = document.getElementById('productLink').value.trim();
             let hasError = false;
+
+            if (!productStatus) {
+                const error = document.createElement('span');
+                error.className = 'error-message';
+                error.textContent = 'Please select a product status.';
+                document.getElementById('productStatus').parentElement.appendChild(error);
+                hasError = true;
+            }
+            if (!productLanguage) {
+                const error = document.createElement('span');
+                error.className = 'error-message';
+                error.textContent = 'Please fill in the product language.';
+                document.getElementById('productLanguage').parentElement.appendChild(error);
+                hasError = true;
+            }
+            if (!productLink) {
+                const error = document.createElement('span');
+                error.className = 'error-message';
+                error.textContent = 'Please fill in the product link.';
+                document.getElementById('productLink').parentElement.appendChild(error);
+                hasError = true;
+            }else if (productLink && !/^https?:\/\/.+/i.test(productLink)) {
+                const error = document.createElement('span');
+                error.className = 'error-message';
+                error.textContent = 'Please enter a valid URL.';
+                document.getElementById('productLink').parentElement.appendChild(error);
+                hasError = true;
+            }
 
             if (!productName) {
                 const error = document.createElement('span');
@@ -318,10 +553,10 @@
                 hasError = true;
             }
 
-            if (!productPrice) {
+            if (!productPrice || productPrice <= 0) {
                 const error = document.createElement('span');
                 error.className = 'error-message';
-                error.textContent = 'Please fill in the product price.';
+                error.textContent = 'Please enter a valid price greater than 0.';
                 document.getElementById('productPrice').parentElement.appendChild(error);
                 hasError = true;
             }
@@ -334,16 +569,60 @@
                 hasError = true;
             }
 
-            if (!productImage) {
+            if (croppedImages.size < minImages) {
                 const error = document.createElement('span');
                 error.className = 'error-message';
-                error.textContent = 'Please select a product image.';
+                error.textContent = `Please upload at least ${minImages} images.`;
                 document.querySelector('.image-upload-container').appendChild(error);
                 hasError = true;
             }
 
-            if (!hasError) {
-                this.submit(); // Submit the form if no errors
+            if (hasError) return;
+
+            submitButton.disabled = true;
+            submitButton.textContent = 'Adding...';
+
+            const formData = new FormData(addProductForm);
+            croppedImages.forEach((blob, fileName) => {
+                formData.append('productImages', blob, fileName); 
+
+            });
+
+            try {
+                const response = await fetch('/admin/addProduct', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'Product Added Successfully',
+                        text: data.message,
+                        confirmButtonText: 'OK'
+                    });
+                    window.location.href = '/admin/products';
+                } else {
+                    await Swal.fire({
+                        icon: 'error',
+                        title: 'Error Adding Product',
+                        text: data.message,
+                        confirmButtonText: 'OK'
+                    });
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'An unexpected error occurred. Please try again later.',
+                    confirmButtonText: 'OK'
+                });
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = 'Add Product';
             }
         });
     </script>
