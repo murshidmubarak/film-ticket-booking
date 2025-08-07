@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Summary</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .header { background-color: #f4a261; color: white; padding: 10px; text-align: center; }
+        .summary { background-color: #fff; padding: 20px; border-radius: 10px; margin-top: 20px; }
+        .summary div { margin-bottom: 10px; }
+        .total { font-weight: bold; color: #2a9d8f; }
+        .continue-btn { background-color: #264653; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>ORDER SUMMARY</h2>
+    </div>
+    <div class="summary">
+        <div>SU FROM SO</div>
+        <div><strong>Show Date & Time :</strong> <%= date %>, <%= time %></div>
+        <div><strong>Screen :</strong> <%= screen %></div>
+        <div><strong>Seats :</strong> <%= selectedSeats.join(', ') %></div>
+        <div><strong><%= selectedSeats.length %> Ticket</strong> <span class="total">₹<%= totalAmount %> ✓</span></div>
+        <div class="total">₹<%= totalAmount %></div>
+        <button class="continue-btn">CONTINUE</button>
+    </div>
+</body>
+</html>

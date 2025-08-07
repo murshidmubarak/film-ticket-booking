@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Set Show Time</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+            margin: 0;
+            padding: 0;
+        }
+        .header {
+            background-color: #2d2d2d;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 24px;
+        }
+        .date-select {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            padding: 15px;
+        }
+        .date-btn {
+            margin: 5px;
+            padding: 10px 15px;
+            border: none;
+            background-color: #ccc;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .date-btn.today {
+            background-color: #007bff;
+            color: white;
+        }
+        .time-slots {
+            padding: 20px;
+            text-align: center;
+        }
+        .time-slot {
+            margin: 10px;
+        }
+        .available {
+            padding: 10px 15px;
+            border: none;
+            background-color: #28a745;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .screen-info {
+            font-size: 14px;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .ticket-counter {
+            margin: 10px 0;
+        }
+        .ticket-counter button {
+            padding: 5px 10px;
+            background-color: #ccc;
+            border: none;
+            cursor: pointer;
+        }
+        .ticket-counter span {
+            padding: 5px 15px;
+            background-color: #000;
+            color: white;
+            margin: 0 5px;
+        }
+        .pick-seats-btn {
+            padding: 10px 20px;
+            background-color: #d4a017;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .close {
+            float: right;
+            font-size: 20px;
+            cursor: pointer;
+        }
+        .legend {
+            text-align: center;
+            margin: 20px;
+        }
+        .legend span {
+            display: inline-block;
+            margin: 0 15px;
+        }
+        .seats-available, .not-available {
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 5px;
+        }
+        .seats-available {
+            background-color: #28a745;
+        }
+        .not-available {
+            background-color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">Cinema Booking</div>
+
+    <div class="date-select">
+        <% const today = new Date().toDateString(); %>
+        <% for (const date in groupedByDate) { %>
+            <button 
+                class="date-btn <%= date === today ? 'today' : '' %>" 
+                data-date="<%= date %>"><%= date %>
+            </button>
+        <% } %>
+    </div>
+
+    <div id="showtimes-container">
+        <% for (const date in groupedByDate) { %>
+            <div class="time-slots date-group" data-date="<%= date %>" style="display: <%= date === today ? 'block' : 'none' %>;">
+                <% groupedByDate[date].forEach(slot => { %>
+                    <div class="screen-info">Screen <%= slot.screen %></div>
+                    <div class="time-slot">
+                        <button 
+                            class="available" 
+                            onclick="showSeatSelection('<%= slot.time %>', '<%= slot.screen %>', '<%= date %>', '<%= product._id %>', '<%= product.name %>')">
+                            <%= slot.time %>
+                        </button>
+                    </div>
+                <% }) %>
+            </div>
+        <% } %>
+    </div>
+
+    <div class="modal" id="seatSelectionModal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2 id="movieTitle"><%= product.name %></h2>
+            <div id="showDetails"></div>
+            <div class="ticket-counter">
+                <button onclick="updateTickets(-1)">-</button>
+                <span id="ticketCount">1</span>
+                <button id="plusBtn" onclick="updateTickets(1)">+</button>
+            </div>
+            <button class="pick-seats-btn" onclick="pickSeats()">Pick Your Seats</button>
+        </div>
+    </div>
+
+    <div class="legend">
+        <span><div class="not-available" style="width: 12px; height: 12px; border-radius: 50%;"></div> Not Available</span>
+        <span><div class="seats-available" style="width: 12px; height: 12px; border-radius: 50%;"></div> Seats Available</span>
+    </div>
+
+    <script>
+        const dateButtons = document.querySelectorAll('.date-btn');
+        const allGroups = document.querySelectorAll('.date-group');
+        const modal = document.getElementById('seatSelectionModal');
+        let ticketCount = 1;
+        let selectedScreen = '';
+        let selectedDate = '';
+        let selectedTime = ''; // Store original time for display
+
+        dateButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const date = btn.dataset.date;
+                allGroups.forEach(group => group.style.display = 'none');
+                document.querySelector(`.date-group[data-date="${date}"]`).style.display = 'block';
+                dateButtons.forEach(b => b.classList.remove('today'));
+                btn.classList.add('today');
+            });
+        });
+
+        function showSeatSelection(time, screen, date, movieId, movieName) {
+            selectedScreen = screen;
+            selectedDate = date;
+            selectedTime = time; // Store original time string
+            document.getElementById('showDetails').textContent = `${date} ${time}`;
+            modal.style.display = 'block';
+        }
+
+        function closeModal() {
+            modal.style.display = 'none';
+            selectedScreen = '';
+            selectedDate = '';
+        }
+
+        function updateTickets(change) {
+            ticketCount = Math.max(1, ticketCount + change);
+            document.getElementById('ticketCount').textContent = ticketCount;
+            const plusBtn = document.getElementById('plusBtn');
+            plusBtn.disabled = ticketCount === 7;
+        }
+
+        // function pickSeats() {
+        //     const ticketCount = document.getElementById('ticketCount').textContent;
+        //     const movieId = '<%= product._id %>';
+        //     const time = document.getElementById('showDetails').textContent.split(' ')[1];
+        //     // Convert date to YYYY-MM-DD format
+        //     let date;
+        //     try {
+        //         const dateObj = new Date(selectedDate);
+        //         date = dateObj.toISOString().split('T')[0]; // e.g., "2025-08-07"
+        //     } catch (e) {
+        //         console.error('Error formatting date:', e);
+        //         date = selectedDate; // Fallback to original date string
+        //     }
+        //     const screen = selectedScreen;
+        //     const time = selectedTime; // Use the original time string
+        //     // window.location.href = `/book/${movieId}?time=${encodeURIComponent(time)}&date=${encodeURIComponent(date)}&screen=${encodeURIComponent(screen)}&tickets=${ticketCount}`;
+        //                 window.location.href = `/book/${movieId}?time=${encodeURIComponent(time)}&date=${encodeURIComponent(date)}&screen=${encodeURIComponent(screen)}&tickets=${ticketCount}`;
+
+        //     closeModal();
+
+        // }
+
+        function pickSeats() {
+    const ticketCount = document.getElementById('ticketCount').textContent;
+    const movieId = '<%= product._id %>';
+
+    // Convert date to YYYY-MM-DD format
+    let date;
+    try {
+        const dateObj = new Date(selectedDate);
+        date = dateObj.toISOString().split('T')[0];
+    } catch (e) {
+        console.error('Error formatting date:', e);
+        date = selectedDate;
+    }
+
+    const screen = selectedScreen;
+    const time = selectedTime;
+
+    window.location.href = `/book/${movieId}?time=${encodeURIComponent(time)}&date=${encodeURIComponent(date)}&screen=${encodeURIComponent(screen)}&tickets=${ticketCount}`;
+    closeModal();
+}
+
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
+    </script>
+
+</body>
+</html>

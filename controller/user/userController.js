@@ -148,6 +148,12 @@ const login = async (req, res) => {
             return res.status(400).json({ message: 'Invalid password' });
         }
 
+           req.session.user = {
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+        };
+
         res.status(200).json({ success: true, message: 'Login successful' });
     } catch (error) {
         console.error(error);
@@ -158,8 +164,8 @@ const login = async (req, res) => {
 
 const loadHome = async (req, res) => {
     try {
-        console.log("Home page loaded");
         const user = req.session.user;
+        console.log('User session:', user);
 
         const products = await Product.find({});
         return res.render('home', { products, user });

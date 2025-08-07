@@ -373,7 +373,7 @@
                 <div class="movie-info">
                     <div class="movie-title"><%= product.name %></div>
                     <div class="movie-language"><%= product.language %></div>
-                    <button class="book-button">BOOK</button>
+                    <button class="book-button" onclick="location.href='/setTime/<%= product._id %>'">BOOK</button>
                 </div>
             </div>
         <% }) %>

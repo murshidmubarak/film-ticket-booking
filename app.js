@@ -51,8 +51,9 @@ app.use(express.static(path.join(__dirname, "public")));
 // Serve uploaded files statically
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-app.use('/', userRoutes);
 app.use('/admin', adminRoutes);
+app.use('/', userRoutes);
+
 
 app.listen(process.env.PORT, () => {
     console.log(`Server is running on port ${process.env.PORT}`);

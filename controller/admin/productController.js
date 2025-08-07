@@ -69,7 +69,18 @@ for (let i = 0; i < req.files.length; i++) {
     }
 };
 
+const viewProducts = async (req, res) => {
+    try {
+        const products = await Product.find();
+        return res.render('showProducts', { products });
+    } catch (error) {
+        console.error('Error fetching products:', error);
+        return res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+};
+
 module.exports = {
     getProductPage,
-    addProduct
+    addProduct,
+    viewProducts
 };
