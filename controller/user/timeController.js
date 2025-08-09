@@ -1,6 +1,7 @@
 const User = require('../../models/userSchema');
 const Product = require('../../models/productSchema');
 const ProductTiming = require('../../models/productTimingSchema');
+const Razorpay = require('../../config/razorpay');
 
 
 
@@ -105,7 +106,8 @@ const loadOrderSummary = async (req, res) => {
             date,
             screen,
             selectedSeats: selectedSeats ? JSON.parse(selectedSeats) : [],
-            totalAmount: totalAmount ? parseFloat(totalAmount) : 0
+            totalAmount: totalAmount ? parseFloat(totalAmount) : 0,
+            razorpayKeyId: process.env.RAZORPAY_KEY_ID
         });
     } catch (error) {
         console.error('Error loading order summary:', error);

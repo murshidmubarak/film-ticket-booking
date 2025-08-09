@@ -24,7 +24,132 @@
         <div><strong>Seats :</strong> <%= selectedSeats.join(', ') %></div>
         <div><strong><%= selectedSeats.length %> Ticket</strong> <span class="total">₹<%= totalAmount %> ✓</span></div>
         <div class="total">₹<%= totalAmount %></div>
-        <button class="continue-btn">CONTINUE</button>
+        <button class="continue-btn" id="payBtn">CONTINUE</button>
     </div>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+// document.getElementById("payBtn").onclick = async function () {
+//     const amount = <%= totalAmount %>;
+
+//     const orderData = await fetch("/create-order", {
+//         method: "POST",
+//         headers: { "Content-Type": "application/json" },
+//         body: JSON.stringify({ amount })
+//     }).then(res => res.json());
+
+//     if (!orderData.id) {
+//         Swal.fire({
+//             icon: 'error',
+//             title: 'Failed to create Razorpay order',
+//             text: 'Please try again later.'
+//         });
+//         return;
+//     }
+
+//     const options = {
+//         key: "<%= razorpayKeyId %>", // passed from backend render
+//         amount: orderData.amount,
+//         currency: "INR",
+//         name: "Your Cinema",
+//         description: "Ticket Payment",
+//         order_id: orderData.id,
+//         handler: async function (response) {
+//             const verifyRes = await fetch("/verify-payment", {
+//                 method: "POST",
+//                 headers: { "Content-Type": "application/json" },
+//                 body: JSON.stringify(response)
+//             }).then(res => res.json());
+
+//             if (verifyRes.success) {
+//                 Swal.fire({
+//                     icon: 'success',
+//                     title: 'Payment successful!',
+//                     text: 'Thank you for your purchase.'
+//                 });
+//                 // Redirect to QR code page
+//                 // window.location.href = "/ticket-qr?orderId=" + orderData.id;
+//                 window.location.href='/login'
+//             } else {
+//                 Swal.fire({
+//                     icon: 'error',
+//                     title: 'Payment verification failed!',
+//                     text: 'Please try again later.'
+//                 });
+//             }
+//         },
+//         theme: { color: "#3399cc" }
+//     };
+
+//     const rzp1 = new Razorpay(options);
+//     rzp1.open();
+// };
+document.getElementById("payBtn").onclick = async function () {
+    const bookingData = {
+        amount: <%= totalAmount %>,
+        date: "<%= date %>",
+        time: "<%= time %>",
+        screen: "<%= screen %>",
+        selectedSeats: <%- JSON.stringify(selectedSeats) %>
+    };
+
+    const orderData = await fetch("/create-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(bookingData)
+    }).then(res => res.json());
+
+    if (!orderData.id) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Failed to create Razorpay order',
+            text: 'Please try again later.'
+        });
+        return;
+    }
+
+    const options = {
+        key: "<%= razorpayKeyId %>",
+        amount: orderData.amount,
+        currency: "INR",
+        name: "Your Cinema",
+        description: "Ticket Payment",
+        order_id: orderData.id,
+        handler: async function (response) {
+            const verifyRes = await fetch("/verify-payment", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(response)
+            }).then(res => res.json());
+
+            if (verifyRes.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Payment successful!',
+                    text: 'Thank you for your purchase, your ticket is stored in my orders'
+                });
+                // window.location.href = '/ticket-qr?orderId=' + orderData.id;
+                // window.location.href = '/ticket-qr?orderId=' + orderData.id;
+
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Payment verification failed!',
+                    text: 'Please try again later.'
+                });
+            }
+        },
+        theme: { color: "#3399cc" }
+    };
+
+    const rzp1 = new Razorpay(options);
+    rzp1.open();
+};
+
+
+</script>
+
 </body>
 </html>
