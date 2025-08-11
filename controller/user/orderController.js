@@ -2,11 +2,12 @@ const crypto = require('crypto');
 const razorpayInstance = require('../../config/razorpay');
 const Order = require('../../models/orderSchema');
 const QRCode = require('qrcode'); // fixed name
+const BookedSeats = require('../../models/bookedSeats'); // Import the BookedSeats model
 
 
 const createOrder = async (req, res) => {
     try {
-        const { amount, date, time, screen, selectedSeats } = req.body;
+        const { name, amount, date, time, screen, selectedSeats, productId } = req.body;
         const user = req.session.user;
 
         // Generate internal orderId
@@ -21,7 +22,8 @@ const createOrder = async (req, res) => {
 
         // Save order in DB
         const newOrder = new Order({
-            userId: user._id, // Ensure user is logged in
+            productId,
+            userId: user._id, 
             amount,
             date,
             time,
@@ -29,7 +31,8 @@ const createOrder = async (req, res) => {
             selectedSeats,
             status: "pending",
             razorpayOrderId: razorpayOrder.id,
-            orderId: myOrderId
+            orderId: myOrderId,
+            name
         });
 
         await newOrder.save();
@@ -67,6 +70,14 @@ const verifyPayment = async (req, res) => {
         if (!order) {
             return res.status(404).json({ error: "Order not found!" });
         }
+        const bookedSeats = new BookedSeats({
+            productId: order.productId, // Assuming productId is part of the order
+            screen: order.screen,
+            date: order.date,
+            time: order.time,
+            seats: order.selectedSeats,
+            orderId: order._id
+        });
 
         order.razorpayPaymentId = razorpay_payment_id;
         order.razorpaySignature = razorpay_signature;
@@ -85,17 +96,16 @@ const verifyPayment = async (req, res) => {
         const qrCodeImage = await QRCode.toDataURL(JSON.stringify(qrData));
         order.qrCode = qrCodeImage;
 
+        await bookedSeats.save();
         await order.save();
+         delete req.session.booking;
+        delete req.session.selectedSeats;
+        delete req.session.amount;
+        delete req.session.selectedShow;
 
         res.json({ success: true, qrCode: qrCodeImage });
-        
 
-
-
-
-
-
-        // res.json({ success: true, message: "Payment verified successfully" });
+         // res.json({ success: true, message: "Payment verified successfully" });
     } catch (error) {
         console.error("Error verifying Razorpay payment:", error);
         const order = await Order.findOne({ razorpayOrderId: req.body.razorpay_order_id });

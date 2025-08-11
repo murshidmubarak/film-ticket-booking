@@ -471,9 +471,9 @@
             pricePerSeat: <%= product.ticketPrice || 150 %>
         };
 
-        // Unavailable seats from backend
-        const unavailableSeats = <%= JSON.stringify(productTiming.unavailableSeats || []) %>;
-        
+
+        const unavailableSeats = <%- JSON.stringify(bookedSeats || []) %>;
+
         let selectedSeats = [];
         const maxSeats = <%= tickets || 1 %>;
 
@@ -563,7 +563,7 @@
             const productId = '<%= product._id %>';
             
             const bookingData = {
-               
+                name: '<%= product.name %>',
                 time: '<%= time %>',
                 date: '<%= date %>',
                 screen: '<%= screen %>',

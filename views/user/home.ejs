@@ -308,14 +308,22 @@
                 <i class="fas fa-user"></i>
             </div>
             <div class="user-info">
-                <div class="user-name">Murshid Mubarak</div>
-                <div class="user-email">murshidmubarak9@gmail.com</div>
+                <!-- <div class="user-name">Murshid Mubarak</div> -->
+<div class="user-name">
+    <%- user ? user.name : '<a href="/login">Login</a>' %>
+</div>
+
+                <div class="user-email"><%= user ? user.email : '' %></div>
             </div>
         </div>
         <ul class="sidebar-menu">
             <li><i class="fas fa-film"></i> Now Running</li>
             <li><i class="fas fa-calendar-alt"></i> Upcoming</li>
-            <li><i class="fas fa-home"></i> My Orders</li>
+<li>
+    <a href="/my-orders">
+        <i class="fas fa-home"></i> My Orders
+    </a>
+</li>
             <li><i class="fas fa-comments"></i> Feedback</li>
             <li><i class="fas fa-star"></i> Rate App</li>
             <li><i class="fas fa-share-alt"></i> Share App</li>

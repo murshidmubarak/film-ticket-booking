@@ -4,7 +4,8 @@ const bcrypt = require('bcrypt');
 const router = express.Router();
 const nodemailer = require('nodemailer');
 const Product = require('../../models/productSchema'); // Assuming you have a Product model
-const session = require('express-session');
+const Order = require('../../models/orderSchema'); // Assuming you have an Order model
+
 
 function generateOtp() {
     const otp = Math.floor(100000 + Math.random() * 900000);
@@ -175,6 +176,22 @@ const loadHome = async (req, res) => {
     }
 }
 
+const myOrders = async (req,res)=>{
+    try {
+        const user = req.session.user
+        if(!user){
+            return res.redirect('/login')
+        }
+             const orders = await Order.find({ userId: user._id })
+            .sort({ createdAt: -1 })
+            .lean();        return res.render('my-orders', { orders, user });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+
+}
+
 
 module.exports = {
     loadSignup,
@@ -183,5 +200,6 @@ module.exports = {
     login,
     verifyOtp,
     loadVerifyOtp,
-    loadHome
+    loadHome,
+    myOrders
 };

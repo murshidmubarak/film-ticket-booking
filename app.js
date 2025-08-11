@@ -8,6 +8,7 @@ const path = require('path');
 const userRoutes = require("./routes/userRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const multer = require('multer'); // Added multer
+const nocache=require('nocache')
 
 // Connect to database
 db();
@@ -24,6 +25,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage }); // Initialize multer
 
+app.use(nocache()); // Use nocache middleware to prevent caching
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

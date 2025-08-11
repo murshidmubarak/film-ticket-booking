@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Orders - Galaxy</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f5f5f5; color: #333; }
+        .header { background: linear-gradient(135deg, #d4af37, #b8941f); color: white; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; position: relative; }
+        .nav-header { margin-top: 0; display: flex; align-items: center; justify-content: space-between; width: 100%; }
+        .back-btn { background: none; border: none; color: white; font-size: 24px; cursor: pointer; padding: 8px; }
+        .logo { font-weight: bold; font-size: 18px; font-style: italic; text-align: center; flex: 1; }
+        .filter-btn { background: none; border: none; color: white; font-size: 20px; cursor: pointer; padding: 8px; }
+        .page-title { background: white; padding: 20px 16px; font-size: 20px; font-weight: 600; color: #333; border-bottom: 1px solid #e0e0e0; }
+        .orders-container { padding: 0; }
+        .order-card { background: white; margin: 8px 0; padding: 16px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e0e0e0; }
+        .order-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+        .order-title { font-size: 18px; font-weight: 600; color: #333; margin-bottom: 4px; }
+        .order-datetime { color: #666; font-size: 14px; margin-bottom: 12px; }
+        .order-details { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .order-info { flex: 1; }
+        .screen-info { font-size: 16px; color: #333; margin-bottom: 4px; }
+        .ticket-count { color: #666; font-size: 14px; }
+        .status-badge { padding: 8px 16px; border-radius: 4px; font-size: 14px; font-weight: 600; text-align: center; min-width: 80px; text-transform: uppercase; }
+        .status-completed { background: #e6ffed; color: #28a745; border: 2px solid #28a745; }
+        .status-pending { background: #fff3cd; color: #856404; border: 2px solid #ffc107; }
+        .status-failed, .status-failure { background: #fee; color: #d73a49; border: 2px solid #d73a49; }
+        .order-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; padding-top: 16px; border-top: 1px solid #e0e0e0; }
+        .action-link { color: #007bff; text-decoration: none; font-size: 14px; font-weight: 500; }
+        .action-link:hover { text-decoration: underline; }
+        .resend-link { color: #dc3545; }
+        .content-padding { padding-bottom: 80px; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: white; padding: 20px; border-radius: 8px; width: 90%; max-width: 400px; position: relative; }
+        .modal-close { position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 20px; cursor: pointer; }
+        .modal-title { font-size: 20px; font-weight: 600; margin-bottom: 16px; }
+        .modal-detail { margin-bottom: 12px; font-size: 16px; }
+        .modal-qr { display: flex; justify-content: center; margin-top: 16px; }
+        .modal-qr img { max-width: 200px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="nav-header">
+            <button class="back-btn">←</button>
+            <div class="logo">Galaxy</div>
+            <button class="filter-btn">⚡</button>
+        </div>
+    </div>
+
+    <div class="page-title">ALL ORDERS</div>
+
+    <div class="orders-container content-padding">
+        <% if (orders.length === 0) { %>
+            <p style="padding: 20px;">No orders found.</p>
+        <% } else { %>
+            <% orders.forEach(order => { %>
+                <div class="order-card">
+                    <div class="order-header">
+                        <div>
+                            <div class="order-title"><%= order.name %></div>
+                            <div class="order-datetime">
+                                <%= new Date(order.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) %>,
+                                <%= order.time %>
+                            </div>
+                        </div>
+                        <div class="status-badge status-<%= order.status %>">
+                            <%= order.status.toUpperCase() %>
+                        </div>
+                    </div>
+                    <div class="order-details">
+                        <div class="order-info">
+                            <div class="screen-info">SCREEN <%= order.screen %></div>
+                            <div class="ticket-count">Tickets: <%= order.selectedSeats.length %></div>
+                        </div>
+                    </div>
+                    <div class="order-actions">
+                        <a href="#"
+                           class="action-link view-details"
+                           data-title="<%= order.name %>"
+                           data-date="<%= order.date.toISOString() %>"
+                           data-time="<%= order.time %>"
+                           data-screen="<%= order.screen %>"
+                           data-seats="<%= order.selectedSeats.join(', ') %>"
+                           data-amount="<%= order.amount %>"
+                           data-status="<%= order.status %>"
+                           data-qr="<%= order.qrCode || '' %>">
+                           View Ticket Details
+                        </a>
+                        <% if (order.status === 'completed') { %>
+                            <a href="#" class="action-link">Download Ticket</a>
+                        <% } else if (order.status === 'pending') { %>
+                            <a href="#" class="action-link">Complete Payment</a>
+                        <% } else { %>
+                            <a href="#" class="action-link resend-link">Resend Ticket Info</a>
+                        <% } %>
+                    </div>
+                </div>
+            <% }) %>
+        <% } %>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal" id="order-modal">
+        <div class="modal-content">
+            <button class="modal-close">&times;</button>
+            <div class="modal-title" id="modal-title"></div>
+            <div class="modal-detail" id="modal-datetime"></div>
+            <div class="modal-detail" id="modal-screen"></div>
+            <div class="modal-detail" id="modal-seats"></div>
+            <div class="modal-detail" id="modal-amount"></div>
+            <div class="modal-detail" id="modal-status"></div>
+            <div class="modal-qr" id="modal-qr"></div>
+        </div>
+    </div>
+
+    <script>
+        document.querySelector('.back-btn').addEventListener('click', () => {
+            window.history.back();
+        });
+
+        document.querySelectorAll('.view-details').forEach(link => {
+            link.addEventListener('click', e => {
+                e.preventDefault();
+                const order = e.target.dataset;
+
+                document.getElementById('modal-title').textContent = `Order: ${order.title}`;
+                document.getElementById('modal-datetime').textContent =
+                    `Date & Time: ${new Date(order.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}, ${order.time}`;
+                document.getElementById('modal-screen').textContent = `Screen: ${order.screen}`;
+                document.getElementById('modal-seats').textContent = `Seats: ${order.seats}`;
+                document.getElementById('modal-amount').textContent = `Amount: ₹${order.amount}`;
+                document.getElementById('modal-status').textContent = `Status: ${order.status.toUpperCase()}`;
+                document.getElementById('modal-qr').innerHTML =
+                    order.status === 'completed' && order.qr
+                    ? `<img src="${order.qr}" alt="QR Code">`
+                    : '';
+
+                document.getElementById('order-modal').style.display = 'flex';
+            });
+        });
+
+        document.querySelector('.modal-close').addEventListener('click', () => {
+            document.getElementById('order-modal').style.display = 'none';
+        });
+    </script>
+</body>
+</html>

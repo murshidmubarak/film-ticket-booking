@@ -2,7 +2,55 @@ const User = require('../../models/userSchema');
 const Product = require('../../models/productSchema');
 const ProductTiming = require('../../models/productTimingSchema');
 const Razorpay = require('../../config/razorpay');
+const BookedSeats = require('../../models/bookedSeats'); // Import the BookedSeats model
 
+
+
+// const loadSetTime = async (req, res) => {
+//     try {
+//         const user = req.session.user;
+//         const productId = req.params.id;
+
+//         if (!user) {
+//             return res.status(401).send('Unauthorized');
+//         }
+
+//         const product = await Product.findById(productId);
+//         if (!product) {
+//             return res.status(404).send('Film not found');
+//         }
+
+//         const allTimings = await ProductTiming.find({ productId });
+
+//         // Group timings by date string (e.g., "Wed Aug 06 2025")
+//         const groupedByDate = {};
+
+//         allTimings.forEach(timing => {
+//             const start = new Date(timing.startDate);
+//             const dateKey = start.toDateString();
+
+//             if (!groupedByDate[dateKey]) {
+//                 groupedByDate[dateKey] = [];
+//             }
+
+//             timing.showTimes.forEach(show => {
+//                 groupedByDate[dateKey].push({
+//                     time: show.time,
+//                     screen: show.screen
+//                 });
+//             });
+//         });
+
+//         res.render('setTime', {
+//             product,
+//             user,
+//             groupedByDate
+//         });
+//     } catch (error) {
+//         console.error('Error loading set time:', error);
+//         res.status(500).send('Internal Server Error');
+//     }
+// };
 
 
 const loadSetTime = async (req, res) => {
@@ -21,23 +69,31 @@ const loadSetTime = async (req, res) => {
 
         const allTimings = await ProductTiming.find({ productId });
 
-        // Group timings by date string (e.g., "Wed Aug 06 2025")
+        // Current date at midnight (so only today or future)
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
         const groupedByDate = {};
 
         allTimings.forEach(timing => {
             const start = new Date(timing.startDate);
-            const dateKey = start.toDateString();
+            start.setHours(0, 0, 0, 0); // normalize date
 
-            if (!groupedByDate[dateKey]) {
-                groupedByDate[dateKey] = [];
-            }
+            // Only include if date >= today
+            if (start >= today) {
+                const dateKey = start.toDateString();
 
-            timing.showTimes.forEach(show => {
-                groupedByDate[dateKey].push({
-                    time: show.time,
-                    screen: show.screen
+                if (!groupedByDate[dateKey]) {
+                    groupedByDate[dateKey] = [];
+                }
+
+                timing.showTimes.forEach(show => {
+                    groupedByDate[dateKey].push({
+                        time: show.time,
+                        screen: show.screen
+                    });
                 });
-            });
+            }
         });
 
         res.render('setTime', {
@@ -67,6 +123,16 @@ const loadBook = async (req, res) => {
         if (!productTiming) {
             return res.status(404).send('No timings available for this film');
         }
+
+         const bookedSeats = await BookedSeats.find({
+            productId,
+            screen,
+            date: new Date(date), // ensure date matches format
+            time
+        });
+
+        // Flatten seat arrays
+        const bookedSeatsList = bookedSeats.flatMap(bs => bs.seats);
         res.render('book', {
             product,
             user,
@@ -74,7 +140,8 @@ const loadBook = async (req, res) => {
             time,
             date,
             screen,
-            tickets
+            tickets,
+            bookedSeats: bookedSeatsList
         });
 
 
@@ -88,7 +155,7 @@ const loadOrderSummary = async (req, res) => {
     try {
         const user = req.session.user;
         const productId = req.params.id;
-        const { time, date, screen, selectedSeats, totalAmount } = req.query;
+        const { name, time, date, screen, selectedSeats, totalAmount } = req.query;
 
         if (!user) {
             return res.status(401).send('Unauthorized');
@@ -100,6 +167,8 @@ const loadOrderSummary = async (req, res) => {
         }
 
         res.render('orderSummary', {
+            productId,
+            name,
             product,
             user,
             time,

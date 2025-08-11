@@ -1,6 +1,11 @@
 const mongoose = require('mongoose');
 
 const orderSchema = new mongoose.Schema({
+    productId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Product',
+        required: true
+    },
     userId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
@@ -48,7 +53,11 @@ const orderSchema = new mongoose.Schema({
     },
     qrCode: {
         type: String,
-        unique: true
+    
+    },
+    name: {
+        type: String,
+        required: true
     }
 }, { timestamps: true });
 

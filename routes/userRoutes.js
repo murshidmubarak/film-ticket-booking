@@ -20,4 +20,6 @@ router.get('/orderSummary/:id', timeController.loadOrderSummary);
 router.post('/create-order', orderController.createOrder);
  router.post('/verify-payment', orderController.verifyPayment);
 
+ router.get('/my-orders',userController.myOrders)
+
 module.exports = router;

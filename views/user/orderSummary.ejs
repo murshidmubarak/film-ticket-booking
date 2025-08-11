@@ -18,7 +18,7 @@
         <h2>ORDER SUMMARY</h2>
     </div>
     <div class="summary">
-        <div>SU FROM SO</div>
+        <div><strong>Film Name :</strong> <%= name %></div>
         <div><strong>Show Date & Time :</strong> <%= date %>, <%= time %></div>
         <div><strong>Screen :</strong> <%= screen %></div>
         <div><strong>Seats :</strong> <%= selectedSeats.join(', ') %></div>
@@ -87,66 +87,97 @@
 //     rzp1.open();
 // };
 document.getElementById("payBtn").onclick = async function () {
-    const bookingData = {
-        amount: <%= totalAmount %>,
-        date: "<%= date %>",
-        time: "<%= time %>",
-        screen: "<%= screen %>",
-        selectedSeats: <%- JSON.stringify(selectedSeats) %>
-    };
+    try {
+        // Prepare booking data
+        const bookingData = {
+            productId: "<%= productId %>",
+            amount: <%= totalAmount %>,
+            name: "<%= name %>",
+            date: "<%= date %>",
+            time: "<%= time %>",
+            screen: "<%= screen %>",
+            selectedSeats: <%- JSON.stringify(selectedSeats) %>
+        };
 
-    const orderData = await fetch("/create-order", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(bookingData)
-    }).then(res => res.json());
+        // Create Razorpay order
+        const orderData = await fetch("/create-order", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(bookingData)
+        }).then(res => res.json());
 
-    if (!orderData.id) {
+        if (!orderData.id) {
+            return Swal.fire({
+                icon: "error",
+                title: "Failed to create Razorpay order",
+                text: "Please try again later."
+            });
+        }
+
+        // Razorpay payment options
+        const options = {
+            key: "<%= razorpayKeyId %>",
+            amount: orderData.amount,
+            currency: "INR",
+            name: "Your Cinema",
+            description: "Ticket Payment",
+            order_id: orderData.id,
+            handler: async function (response) {
+                try {
+                    // Verify payment
+                    const verifyRes = await fetch("/verify-payment", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(response)
+                    }).then(res => res.json());
+
+                    if (verifyRes.success) {
+                        await Swal.fire({
+                            icon: "success",
+                            title: "Payment successful!",
+                            text: "Thank you for your purchase, your ticket is stored in My Orders",
+                            allowOutsideClick: false,
+                            allowEscapeKey: false
+                        });
+                        window.location.href = "/my-orders";
+                    } else {
+                        Swal.fire({
+                            icon: "error",
+                            title: "Payment verification failed!",
+                            text: "Please try again later."
+                        });
+                    }
+                } catch (err) {
+                    console.error("Payment verification error:", err);
+                    Swal.fire({
+                        icon: "error",
+                        title: "An error occurred!",
+                        text: "Please try again later."
+                    });
+                }
+            },
+            theme: { color: "#3399cc" }
+        };
+
+        // Open Razorpay payment
+        new Razorpay(options).open();
+
+    } catch (err) {
+        console.error("Payment error:", err);
         Swal.fire({
-            icon: 'error',
-            title: 'Failed to create Razorpay order',
-            text: 'Please try again later.'
+            icon: "error",
+            title: "An error occurred!",
+            text: "Please try again later."
         });
-        return;
     }
-
-    const options = {
-        key: "<%= razorpayKeyId %>",
-        amount: orderData.amount,
-        currency: "INR",
-        name: "Your Cinema",
-        description: "Ticket Payment",
-        order_id: orderData.id,
-        handler: async function (response) {
-            const verifyRes = await fetch("/verify-payment", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(response)
-            }).then(res => res.json());
-
-            if (verifyRes.success) {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Payment successful!',
-                    text: 'Thank you for your purchase, your ticket is stored in my orders'
-                });
-                // window.location.href = '/ticket-qr?orderId=' + orderData.id;
-                // window.location.href = '/ticket-qr?orderId=' + orderData.id;
-
-            } else {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Payment verification failed!',
-                    text: 'Please try again later.'
-                });
-            }
-        },
-        theme: { color: "#3399cc" }
-    };
-
-    const rzp1 = new Razorpay(options);
-    rzp1.open();
 };
+
+// window.addEventListener("pageshow", function (event) {
+//     if (event.persisted || performance.getEntriesByType("navigation")[0].type === "back_forward") {
+//         window.location.href = "/";
+//     }
+// });
+
 
 
 </script>
