@@ -1,7 +1,6 @@
 const User = require('../../models/userSchema');
 const Product = require('../../models/productSchema');
 const ProductTiming = require('../../models/productTimingSchema');
-const Razorpay = require('../../config/razorpay');
 const BookedSeats = require('../../models/bookedSeats'); // Import the BookedSeats model
 
 
@@ -22,23 +21,37 @@ const BookedSeats = require('../../models/bookedSeats'); // Import the BookedSea
 
 //         const allTimings = await ProductTiming.find({ productId });
 
-//         // Group timings by date string (e.g., "Wed Aug 06 2025")
+//         // Current date at midnight (so only today or future)
+//         const today = new Date();
+//         today.setHours(0, 0, 0, 0);
+
 //         const groupedByDate = {};
 
 //         allTimings.forEach(timing => {
 //             const start = new Date(timing.startDate);
-//             const dateKey = start.toDateString();
+//             start.setHours(0, 0, 0, 0); // normalize date
 
-//             if (!groupedByDate[dateKey]) {
-//                 groupedByDate[dateKey] = [];
-//             }
+//             // Only include if date >= today
+//             if (start >= today) {
+//                 const dateKey = start.toDateString();
 
-//             timing.showTimes.forEach(show => {
-//                 groupedByDate[dateKey].push({
-//                     time: show.time,
-//                     screen: show.screen
+//                 if (!groupedByDate[dateKey]) {
+//                     groupedByDate[dateKey] = [];
+//                 }
+
+//                 timing.showTimes.forEach(show => {
+//                     const [hours, minutes] = show.time.split(':');
+//                     const showDateTime = new Date(start);
+//                     showDateTime.setHours(hours, minutes, 0, 0)
+
+                    
+//                      groupedByDate[dateKey].push({
+//                         time: show.time,
+//                         screen: show.screen,
+//                          dateTimeISO: showDateTime.toISOString()
+//                     });
 //                 });
-//             });
+//             }
 //         });
 
 //         res.render('setTime', {
@@ -51,15 +64,13 @@ const BookedSeats = require('../../models/bookedSeats'); // Import the BookedSea
 //         res.status(500).send('Internal Server Error');
 //     }
 // };
-
-
 const loadSetTime = async (req, res) => {
     try {
         const user = req.session.user;
         const productId = req.params.id;
 
         if (!user) {
-            return res.status(401).send('Unauthorized');
+            return res.redirect("/login")
         }
 
         const product = await Product.findById(productId);
@@ -75,32 +86,51 @@ const loadSetTime = async (req, res) => {
 
         const groupedByDate = {};
 
-        allTimings.forEach(timing => {
+        for (const timing of allTimings) {
             const start = new Date(timing.startDate);
-            start.setHours(0, 0, 0, 0); // normalize date
+            start.setHours(0, 0, 0, 0);
 
             // Only include if date >= today
             if (start >= today) {
                 const dateKey = start.toDateString();
+                if (!groupedByDate[dateKey]) groupedByDate[dateKey] = [];
 
-                if (!groupedByDate[dateKey]) {
-                    groupedByDate[dateKey] = [];
-                }
+                for (const show of timing.showTimes) {
+                    const [hours, minutes] = show.time.split(':');
+                    const showDateTime = new Date(start);
+                    showDateTime.setHours(hours, minutes, 0, 0);
 
-                timing.showTimes.forEach(show => {
+                    // Get booked seats for this show (match by productId + screen + date + time)
+                    const bookedSeatsDocs = await BookedSeats.find({
+                        productId,
+                        screen: show.screen,
+                        date: start.toISOString().split('T')[0], // Make sure your DB stores dates in this format
+                        time: show.time
+                    });
+
+                    // Count total booked seats
+                    const bookedCount = bookedSeatsDocs.reduce((acc, doc) => acc + doc.seats.length, 0);
+
+                    // You can make total seats dynamic per screen, but here hardcoded = 36
+                    const totalSeats = 36;
+                    const available = totalSeats - bookedCount;
+
                     groupedByDate[dateKey].push({
                         time: show.time,
-                        screen: show.screen
+                        screen: show.screen,
+                        dateTimeISO: showDateTime.toISOString(),
+                        availableSeats: available
                     });
-                });
+                }
             }
-        });
+        }
 
         res.render('setTime', {
             product,
             user,
             groupedByDate
         });
+
     } catch (error) {
         console.error('Error loading set time:', error);
         res.status(500).send('Internal Server Error');
@@ -143,6 +173,8 @@ const loadBook = async (req, res) => {
             tickets,
             bookedSeats: bookedSeatsList
         });
+
+        console.log("screen number:", screen);
 
 
     } catch (error) {

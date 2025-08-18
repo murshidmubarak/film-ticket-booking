@@ -465,8 +465,8 @@
 
         // Seat layout configuration
         const seatLayout = {
-            rows: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P'],
-            seatsPerRow: 20,
+            rows: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'],
+            seatsPerRow: 4,
             aisleAfter: [5, 14],
             pricePerSeat: <%= product.ticketPrice || 150 %>
         };
@@ -585,6 +585,21 @@
         document.addEventListener('DOMContentLoaded', function() {
             generateSeats();
         });
+
+   window.addEventListener("pageshow", function (event) {
+    const paymentDone = sessionStorage.getItem("paymentDone"); // check flag
+
+    if (paymentDone === "true") {
+        if (
+            event.persisted || 
+            (window.performance && window.performance.getEntriesByType("navigation")[0].type === "back_forward")
+        ) {
+            window.location.replace("/");
+        }
+    }
+});
+
+
     </script>
 </body>
 </html>

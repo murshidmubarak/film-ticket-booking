@@ -24,6 +24,11 @@
             justify-content: center;
             padding: 15px;
         }
+        .available.soldout {
+    background-color: #dc3545; /* red */
+    cursor: not-allowed;
+}
+
         .date-btn {
             margin: 5px;
             padding: 10px 15px;
@@ -143,13 +148,26 @@
         <% for (const date in groupedByDate) { %>
             <div class="time-slots date-group" data-date="<%= date %>" style="display: <%= date === today ? 'block' : 'none' %>;">
                 <% groupedByDate[date].forEach(slot => { %>
-                    <div class="screen-info">Screen <%= slot.screen %></div>
+                    <!-- <div class="screen-info">Screen <%= slot.screen %></div> -->
                     <div class="time-slot">
-                        <button 
+                        <!-- <button 
                             class="available" 
                             onclick="showSeatSelection('<%= slot.time %>', '<%= slot.screen %>', '<%= date %>', '<%= product._id %>', '<%= product.name %>')">
                             <%= slot.time %>
-                        </button>
+                        </button> -->
+                <button 
+  class="available" 
+  data-datetime="<%= slot.dateTimeISO %>"
+  data-available="<%= slot.availableSeats %>"
+  onclick="showSeatSelection('<%= slot.time %>', '<%= slot.screen %>', '<%= date %>', '<%= product._id %>', '<%= product.name %>', <%= slot.availableSeats %>)">
+  <%= slot.time %>
+</button>
+
+<div class="screen-info">
+    Screen <%= slot.screen %> - Available: <%= slot.availableSeats %> seats
+</div>
+
+
                     </div>
                 <% }) %>
             </div>
@@ -161,12 +179,26 @@
             <span class="close" onclick="closeModal()">&times;</span>
             <h2 id="movieTitle"><%= product.name %></h2>
             <div id="showDetails"></div>
-            <div class="ticket-counter">
+            <!-- <div class="ticket-counter">
                 <button onclick="updateTickets(-1)">-</button>
                 <span id="ticketCount">1</span>
                 <button id="plusBtn" onclick="updateTickets(1)">+</button>
-            </div>
-            <button class="pick-seats-btn" onclick="pickSeats()">Pick Your Seats</button>
+            </div> -->
+            <!-- <button class="pick-seats-btn" onclick="pickSeats()">Pick Your Seats</button> -->
+
+            <div class="ticket-counter">
+    <button onclick="updateTickets(-1)">-</button>
+    <span id="ticketCount">1</span>
+    <button id="plusBtn" onclick="updateTickets(1)">+</button>
+</div>
+
+<!-- 🔹 NEW LINE: shows max seats allowed -->
+<p style="font-size: 14px; color: gray; margin-top: 5px;">
+    Max <span id="maxSeatsText">7</span> seats available
+</p>
+
+<button class="pick-seats-btn" onclick="pickSeats()">Pick Your Seats</button>
+
         </div>
     </div>
 
@@ -194,13 +226,21 @@
             });
         });
 
-        function showSeatSelection(time, screen, date, movieId, movieName) {
-            selectedScreen = screen;
-            selectedDate = date;
-            selectedTime = time; // Store original time string
-            document.getElementById('showDetails').textContent = `${date} ${time}`;
-            modal.style.display = 'block';
-        }
+        let maxSeatsAllowed = 7; // default
+
+function showSeatSelection(time, screen, date, movieId, movieName, availableSeats) {
+    selectedScreen = screen;
+    selectedDate = date;
+    selectedTime = time;
+    maxSeatsAllowed = Math.min(7, availableSeats); // 👈 cap by available seats
+    ticketCount = 1; // reset to 1
+    document.getElementById('maxSeatsText').textContent = maxSeatsAllowed;
+
+    document.getElementById('ticketCount').textContent = ticketCount;
+    document.getElementById('showDetails').textContent = `${date} ${time}`;
+    modal.style.display = 'block';
+}
+
 
         function closeModal() {
             modal.style.display = 'none';
@@ -208,12 +248,17 @@
             selectedDate = '';
         }
 
-        function updateTickets(change) {
-            ticketCount = Math.max(1, ticketCount + change);
-            document.getElementById('ticketCount').textContent = ticketCount;
-            const plusBtn = document.getElementById('plusBtn');
-            plusBtn.disabled = ticketCount === 7;
-        }
+   function updateTickets(change) {
+    ticketCount = Math.max(1, ticketCount + change);
+    document.getElementById('ticketCount').textContent = ticketCount;
+
+    const plusBtn = document.getElementById('plusBtn');
+    plusBtn.disabled = ticketCount === maxSeatsAllowed;
+
+    const minusBtn = document.querySelector('.ticket-counter button:first-child');
+    minusBtn.disabled = ticketCount === 1; // disable when only 1 ticket
+}
+
 
         // function pickSeats() {
         //     const ticketCount = document.getElementById('ticketCount').textContent;
@@ -263,6 +308,48 @@
                 closeModal();
             }
         }
+
+        document.addEventListener('DOMContentLoaded', () => {
+    const now = new Date();
+
+    document.querySelectorAll('.available').forEach(btn => {
+        const showTime = new Date(btn.dataset.datetime);
+        const diffMinutes = (showTime - now) / (1000 * 60);
+        const availableSeats = parseInt(btn.dataset.available, 10);
+
+        // Case 1: Show is sold out
+        if (availableSeats === 0) {
+            btn.disabled = true;
+            btn.classList.add('soldout');
+        }
+
+        // Case 2: Show starting within 15 mins
+        else if (diffMinutes <= 15 && diffMinutes > 0) {
+            btn.disabled = true;
+            btn.classList.add('soldout');
+        }
+
+        // Case 3: Show already started
+        else if (diffMinutes <= 0) {
+            btn.disabled = true;
+            btn.classList.add('soldout');
+        }
+    });
+});
+
+
+window.addEventListener("pageshow", function (event) {
+    // Only block back if payment has finished
+    if (sessionStorage.getItem("paymentDone") === "true") {
+        if (event.persisted || 
+            (window.performance && window.performance.getEntriesByType("navigation")[0].type === "back_forward")) {
+            window.location.replace("/");
+        }
+    }
+});
+
+
+
     </script>
 
 </body>

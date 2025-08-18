@@ -162,6 +162,18 @@ const login = async (req, res) => {
     }
 };
 
+const logout = async(req,res)=>{
+    const resetSession = req.session;
+    req.session.destroy((err) => {
+        if (err) {
+            console.error('Session destruction error:', err);
+            return res.status(500).json({ message: 'Internal server error' });
+        }
+        res.clearCookie('connect.sid'); // Clear the session cookie
+        res.redirect('/')
+    });
+}
+
 
 const loadHome = async (req, res) => {
     try {
@@ -201,5 +213,6 @@ module.exports = {
     verifyOtp,
     loadVerifyOtp,
     loadHome,
-    myOrders
+    myOrders,
+    logout
 };
