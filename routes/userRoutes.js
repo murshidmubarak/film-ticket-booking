@@ -40,6 +40,7 @@ router.post('/logout',userController.logout)
 router.get('/verify-otp', userController.loadVerifyOtp);
 router.post('/verify-otp', userController.verifyOtp);
 router.get('/', userController.loadHome);
+router.get('/movies/:id', userController.movieDetails);
 
 router.get('/setTime/:id', noCache, timeController.loadSetTime);
 router.get('/book/:id', noCache, timeController.loadBook);

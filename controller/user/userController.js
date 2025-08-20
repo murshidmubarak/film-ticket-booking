@@ -113,7 +113,12 @@ const verifyOtp = async (req, res) => {
         await newUser.save();
 
         req.session.userOtp = null;
-        req.session.userData = null;
+                // req.session.userData = null;
+                req.session.user = {
+                    _id: newUser._id,
+                    name: newUser.name,
+                    email: newUser.email,
+                };
 
         res.status(200).json({ success: true, message: 'Signup successful' });
 
@@ -126,7 +131,6 @@ const verifyOtp = async (req, res) => {
 
 const loadLogin = (req, res) => {
     try {
-        console.log("Login page loaded");
         return res.render('login');
     } catch (error) {
         console.error(error);
@@ -178,7 +182,6 @@ const logout = async(req,res)=>{
 const loadHome = async (req, res) => {
     try {
         const user = req.session.user;
-        console.log('User session:', user);
 
         const products = await Product.find({});
         return res.render('home', { products, user });
@@ -204,6 +207,21 @@ const myOrders = async (req,res)=>{
 
 }
 
+const  movieDetails = async(req,res)=>{
+   try {
+       const movieId = req.params.id;
+       const movie = await Product.findById(movieId).lean();
+       
+       if (!movie) {
+           return res.status(404).json({ message: 'Movie not found' });
+       }
+       return res.render('movie-details',{ movie });
+   } catch (error) {
+       console.error(error);
+       res.status(500).json({ message: 'Internal server error' });
+   }
+}
+
 
 module.exports = {
     loadSignup,
@@ -214,5 +232,6 @@ module.exports = {
     loadVerifyOtp,
     loadHome,
     myOrders,
-    logout
+    logout,
+    movieDetails
 };

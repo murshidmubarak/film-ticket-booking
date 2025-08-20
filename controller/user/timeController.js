@@ -1,4 +1,3 @@
-const User = require('../../models/userSchema');
 const Product = require('../../models/productSchema');
 const ProductTiming = require('../../models/productTimingSchema');
 const BookedSeats = require('../../models/bookedSeats'); // Import the BookedSeats model
@@ -111,9 +110,20 @@ const loadSetTime = async (req, res) => {
                     // Count total booked seats
                     const bookedCount = bookedSeatsDocs.reduce((acc, doc) => acc + doc.seats.length, 0);
 
-                    // You can make total seats dynamic per screen, but here hardcoded = 36
-                    const totalSeats = 36;
-                    const available = totalSeats - bookedCount;
+                    // // You can make total seats dynamic per screen, but here hardcoded = 36
+                    // const totalSeats = 36;
+                    // const available = totalSeats - bookedCount;
+
+                    // Set total seats dynamically based on screen number
+                   let totalSeats;
+                   if (show.screen === 1) {
+                   totalSeats = 273;  // For Screen 1
+                    } else {
+                totalSeats = 230;  // For other screens
+                    }
+
+                   const available = totalSeats - bookedCount;
+
 
                     groupedByDate[dateKey].push({
                         time: show.time,
@@ -174,7 +184,6 @@ const loadBook = async (req, res) => {
             bookedSeats: bookedSeatsList
         });
 
-        console.log("screen number:", screen);
 
 
     } catch (error) {

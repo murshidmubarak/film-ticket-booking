@@ -11,6 +11,11 @@ router.post('/login', adminController.adminLogin);
 router.get('/addProduct',  adminController.loadDashboard);
 router.post('/addProduct', upload.array('productImages', 5), productController.addProduct); // Changed to handle multiple images
 router.get('/products', productController.viewProducts);
+router.get('/products/edit/:id', productController.editProductPage);
+// router.post('/products/edit/:id', upload.array('productImages', 5), productController.updateProduct);
+
+
+
 router.get('/setShowTime/:id', addShowTimeController.loadSetTime); // Updated route to match the controller method
 router.post('/setShowTime', addShowTimeController.postLoadSetTime); // Added route for posting show time data
 module.exports = router;

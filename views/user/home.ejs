@@ -390,14 +390,19 @@
     <% if (runningMovies.length > 0) { %>
         <% runningMovies.forEach(product => { %>
             <div class="movie-card">
-                <div class="movie-poster">
-                    <% if (product.images && product.images.length > 0) { %>
-                        <img src="/<%= product.images[0] %>" alt="<%= product.name %> poster" />
-                    <% } else { %>
-                        <div class="no-image">No Image</div>
-                    <% } %>
-                    <div class="movie-rating">★</div>
-                </div>
+                     <div class="movie-poster">
+                          <% if (product.images && product.images.length > 0) { %>
+                            <a href="/movies/<%= product._id %>">
+                            <img src="/<%= product.images[0] %>" alt="<%= product.name %> poster" />
+                            </a>
+                      <% } else { %>
+                      <a href="/movies/<%= product._id %>">
+                     <div class="no-image">No Image</div>
+                      </a>
+                     <% } %>
+                     <div class="movie-rating">★</div>
+                     </div>
+
                 <div class="movie-info">
                     <div class="movie-title"><%= product.name %></div>
                     <div class="movie-language"><%= product.language %></div>

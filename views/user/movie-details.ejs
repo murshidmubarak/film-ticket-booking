@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= movie.name %> - Movie Booking</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #e8e8e8;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #8B4513, #D2691E);
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: white;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .logo {
+            background: white;
+            color: #8B4513;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 16px;
+            text-transform: uppercase;
+        }
+
+        .share-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .movie-banner {
+            background: linear-gradient(135deg, #90EE90, #32CD32);
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .banner-text {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .super-hit {
+            font-size: 36px;
+            font-weight: bold;
+            color: #FF0000;
+            text-align: center;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .movie-content {
+            display: flex;
+            padding: 20px;
+            gap: 15px;
+            align-items: flex-start;
+            background: white;
+            margin: 0 20px;
+            margin-top: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .poster-container {
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .movie-poster {
+            width: 100px;
+            height: 140px;
+            border-radius: 8px;
+            object-fit: cover;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            display: block;
+        }
+
+        .play-button {
+            position: absolute;
+            bottom: -8px;
+            right: -8px;
+            background: #E91E63;
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .play-button::before {
+            content: '▶';
+            margin-left: 2px;
+            font-size: 14px;
+        }
+
+        .movie-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .movie-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+            word-wrap: break-word;
+        }
+
+        .rating {
+            background: linear-gradient(45deg, #32CD32, #90EE90);
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 20px;
+        }
+
+        .info-section {
+            background: white;
+            margin: 20px;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 15px;
+        }
+
+        .info-title {
+            color: #8B4513;
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .info-content {
+            color: #666;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        .book-button {
+            background: linear-gradient(135deg, #8B4513, #D2691E);
+            color: white;
+            border: none;
+            padding: 18px;
+            width: 100%;
+            font-size: 18px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.2);
+        }
+
+        .content-wrapper {
+            padding-bottom: 80px;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .movie-poster {
+                width: 90px;
+                height: 125px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .movie-content {
+                margin: 20px 10px;
+                padding: 15px;
+                gap: 12px;
+            }
+
+            .movie-poster {
+                width: 80px;
+                height: 110px;
+            }
+
+            .play-button {
+                width: 28px;
+                height: 28px;
+                bottom: -6px;
+                right: -6px;
+            }
+
+            .play-button::before {
+                font-size: 12px;
+            }
+
+            .banner-text {
+                font-size: 16px;
+            }
+
+            .super-hit {
+                font-size: 28px;
+            }
+
+            .movie-title {
+                font-size: 18px;
+            }
+
+            .info-section {
+                margin: 15px 10px;
+                padding: 15px;
+            }
+        }
+
+        @media (max-width: 320px) {
+            .movie-poster {
+                width: 70px;
+                height: 95px;
+            }
+            
+            .play-button {
+                width: 24px;
+                height: 24px;
+                bottom: -5px;
+                right: -5px;
+            }
+
+            .play-button::before {
+                font-size: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="content-wrapper">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-left">
+                <button class="back-btn">←</button>
+                <div class="logo">Galaxy</div>
+            </div>
+            <button class="share-btn">⋯</button>
+        </div>
+
+        <!-- Movie Content -->
+        <div class="movie-content">
+            <div class="poster-container">
+                <img src="/<%= movie.images[0] %>" alt="<%= movie.name %> poster" class="movie-poster" />
+                <button class="play-button" onclick="window.location.href='<%= movie.link %>'"></button>
+
+            </div>
+            <div class="movie-info">
+                <h1 class="movie-title"><%= movie.name %></h1>
+                <div class="rating">2.5</div>
+            </div>
+        </div>
+
+        <!-- Language Section -->
+        <div class="info-section">
+            <h2 class="info-title">LANGUAGE :</h2>
+            <p class="info-content"><%= movie.language %></p>
+        </div>
+
+        <!-- About Movie Section -->
+        <div class="info-section">
+            <h2 class="info-title">ABOUT MOVIE :</h2>
+            <p class="info-content"><%= movie.description %></p>
+        </div>
+
+        
+
+    <!-- Book Now Button -->
+<button class="book-button" onclick="window.location.href='/setTime/<%= movie._id %>'">
+  BOOK NOW
+</button>
+
+    <script>
+      
+
+        document.querySelector('.back-btn').addEventListener('click', function() {
+            window.history.back();
+        });
+
+    </script>
+</body>
+</html>

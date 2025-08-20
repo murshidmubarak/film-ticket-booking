@@ -65,10 +65,24 @@ const loadDashboard = (req, res) => {
     }
 };
 
+const editProductPage = async(req,res)=>{
+    try {
+        const productId = req.params.id;
+        const product = await Product.findById(productId);
+        if (!product) {
+            return res.status(404).send('Product not found');
+        }
+        return res.render('editProduct', { product });
+    } catch (error) {
+        console.error('Error loading edit product page:', error);
+        return res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+}
+
 
 module.exports = {
     loadAdminLogin,
     adminLogin,
     loadDashboard,
-    
+    editProductPage
 };

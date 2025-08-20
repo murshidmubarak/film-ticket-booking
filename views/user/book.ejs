@@ -155,8 +155,10 @@
             cursor: not-allowed;
         }
         
-        .seat.aisle-gap {
-            margin-right: 20px;
+        .seat.gap {
+            background: transparent;
+            border: none;
+            cursor: default;
         }
         
         .legend {
@@ -433,10 +435,99 @@
     </div>
 
     <script>
+        // Seat layout configurations
+        const defaultSeatLayout = {
+            pricePerSeat: <%= product.ticketPrice || 150 %>,
+            rows: [
+                { row: 'A', seats: 21, gaps: [] },
+                { row: 'B', seats: 18, gaps: [{ start: 9, size: 3 }] },
+                { row: 'C', seats: 18, gaps: [{ start: 9, size: 3 }] },
+                {
+                    row: 'D',
+                    seats: 12,
+                    gaps: [
+                        { start: 0, size: 3 },
+                        { start: 9, size: 3 },
+                        { start: 18, size: 3 }
+                    ]
+                },
+                {
+                    row: 'E',
+                    seats: 12,
+                    gaps: [
+                        { start: 0, size: 3 },
+                        { start: 9, size: 3 },
+                        { start: 18, size: 3 }
+                    ]
+                },
+                {
+                    row: 'F',
+                    seats: 12,
+                    gaps: [
+                        { start: 0, size: 3 },
+                        { start: 9, size: 3 },
+                        { start: 18, size: 3 }
+                    ]
+                },
+                { row: 'G', seats: 0, gaps: [] },
+                ...Array.from({ length: 10 }, (_, i) => ({
+                    row: String.fromCharCode(72 + i),
+                    seats: 18,
+                    gaps: [{ start: 9, size: 3 }]
+                }))
+            ]
+        };
+
+        const screen2SeatLayout = {
+            pricePerSeat: <%= product.ticketPrice || 150 %>,
+            rows: [
+                { row: 'A', seats: 17, gaps: [] },
+                { row: 'B', seats: 15, gaps: [{ start: 7, size: 2 }] },
+                { row: 'C', seats: 15, gaps: [{ start: 7, size: 2 }] },
+                {
+                    row: 'D',
+                    seats: 11,
+                    gaps: [
+                        { start: 7, size: 2 },
+                        { start: 17, size: 8 }
+                    ]
+                },
+                {
+                    row: 'E',
+                    seats: 11,
+                    gaps: [
+                        { start: 7, size: 2 },
+                        { start: 17, size: 8 }
+                    ]
+                },
+                {
+                    row: 'F',
+                    seats: 11,
+                    gaps: [
+                        { start: 7, size: 2 },
+                        { start: 17, size: 8 }
+                    ]
+                },
+                { row: 'G', seats: 0, gaps: [] },
+                ...Array.from({ length: 10 }, (_, i) => ({
+                    row: String.fromCharCode(72 + i),
+                    seats: 15,
+                    gaps: [{ start: 7, size: 2 }]
+                }))
+            ]
+        };
+
+        // Select layout based on screen
+        const screen = '<%= screen %>';
+        const seatLayout = screen === '2' ? screen2SeatLayout : defaultSeatLayout;
+
+        const unavailableSeats = <%- JSON.stringify(bookedSeats || []) %>;
+        let selectedSeats = [];
+        const maxSeats = <%= tickets || 1 %>;
+
         // Format date and time
         function formatDateTime(dateStr, timeStr) {
             try {
-                // Ensure dateStr is in YYYY-MM-DD format
                 const date = new Date(dateStr);
                 if (isNaN(date.getTime())) {
                     throw new Error('Invalid date format');
@@ -448,71 +539,71 @@
                     year: 'numeric'
                 };
                 const formattedDate = date.toLocaleDateString('en-US', options)
-                    .replace(/,/, '') // Remove comma after weekday
-                    .replace(/(\w+)\s(\w+)\s(\d+)\s(\d+)/, '$1 $2 $3 $4'); // Ensure format: Thu Aug 07 2025
+                    .replace(/,/, '')
+                    .replace(/(\w+)\s(\w+)\s(\d+)\s(\d+)/, '$1 $2 $3 $4');
                 return `${formattedDate}, ${timeStr}`;
             } catch (e) {
                 console.error('Error formatting date:', e);
-                return `${dateStr}, ${timeStr}`; // Fallback to raw values
+                return `${dateStr}, ${timeStr}`;
             }
         }
 
-        // Set formatted date and time on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            const dateTimeElement = document.getElementById('formattedDateTime');
-            dateTimeElement.textContent = formatDateTime('<%= date %>', '<%= time %>');
-        });
-
-        // Seat layout configuration
-        const seatLayout = {
-            rows: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'],
-            seatsPerRow: 4,
-            aisleAfter: [5, 14],
-            pricePerSeat: <%= product.ticketPrice || 150 %>
-        };
-
-
-        const unavailableSeats = <%- JSON.stringify(bookedSeats || []) %>;
-
-        let selectedSeats = [];
-        const maxSeats = <%= tickets || 1 %>;
-
+        // Generate seats based on seatLayout
         function generateSeats() {
             const container = document.getElementById('seatsContainer');
-            
-            seatLayout.rows.forEach(row => {
+            const maxSeatsInRow = Math.max(...seatLayout.rows.map(row => {
+                let total = row.seats;
+                row.gaps.forEach(gap => total += gap.size);
+                return total;
+            }));
+
+            seatLayout.rows.forEach(rowConfig => {
                 const rowDiv = document.createElement('div');
                 rowDiv.className = 'seat-row';
                 
-                // Row label
                 const label = document.createElement('div');
                 label.className = 'row-label';
-                label.textContent = row;
+                label.textContent = rowConfig.row;
                 rowDiv.appendChild(label);
-                
-                // Generate seats for this row
-                for (let seatNum = 1; seatNum <= seatLayout.seatsPerRow; seatNum++) {
-                    const seatId = `${row}${seatNum}`;
-                    const seat = document.createElement('div');
-                    seat.className = 'seat';
-                    seat.dataset.seatId = seatId;
-                    
-                    // Check if seat is unavailable
-                    if (unavailableSeats.includes(seatId)) {
-                        seat.classList.add('unavailable');
-                    } else {
-                        seat.classList.add('available');
-                        seat.addEventListener('click', () => toggleSeat(seatId));
-                    }
-                    
-                    // Add aisle gap
-                    if (seatLayout.aisleAfter.includes(seatNum)) {
-                        seat.classList.add('aisle-gap');
-                    }
-                    
-                    rowDiv.appendChild(seat);
+
+                if (rowConfig.seats === 0) {
+                    container.appendChild(rowDiv);
+                    return;
                 }
-                
+
+                let seatIndex = 0;
+                for (let i = 0; i < maxSeatsInRow; i++) {
+                    let isGap = false;
+                    for (const gap of rowConfig.gaps) {
+                        if (i >= gap.start && i < gap.start + gap.size) {
+                            isGap = true;
+                            break;
+                        }
+                    }
+
+                    if (isGap) {
+                        const gap = document.createElement('div');
+                        gap.className = 'seat gap';
+                        rowDiv.appendChild(gap);
+                    } else if (seatIndex < rowConfig.seats) {
+                        const seatNum = seatIndex + 1;
+                        const seatId = `${rowConfig.row}${seatNum}`;
+                        const seat = document.createElement('div');
+                        seat.className = 'seat';
+                        seat.dataset.seatId = seatId;
+
+                        if (unavailableSeats.includes(seatId)) {
+                            seat.classList.add('unavailable');
+                        } else {
+                            seat.classList.add('available');
+                            seat.addEventListener('click', () => toggleSeat(seatId));
+                        }
+
+                        rowDiv.appendChild(seat);
+                        seatIndex++;
+                    }
+                }
+
                 container.appendChild(rowDiv);
             });
         }
@@ -522,13 +613,11 @@
             const seatIndex = selectedSeats.indexOf(seatId);
             
             if (seatIndex > -1) {
-                // Deselect seat
                 selectedSeats.splice(seatIndex, 1);
                 seat.classList.remove('selected');
                 seat.classList.add('available');
                 seat.textContent = '';
             } else if (selectedSeats.length < maxSeats) {
-                // Select seat
                 selectedSeats.push(seatId);
                 seat.classList.remove('available');
                 seat.classList.add('selected');
@@ -561,7 +650,6 @@
             }
 
             const productId = '<%= product._id %>';
-            
             const bookingData = {
                 name: '<%= product.name %>',
                 time: '<%= time %>',
@@ -571,35 +659,31 @@
                 totalAmount: selectedSeats.length * seatLayout.pricePerSeat
             };
             
-            // Redirect to order summary page
             const params = new URLSearchParams(bookingData);
-               window.location.href = `/orderSummary/${productId}?${params.toString()}`;
-
+            window.location.href = `/orderSummary/${productId}?${params.toString()}`;
         }
 
         function goBack() {
             window.history.back();
         }
 
-        // Initialize seats when page loads
+        // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('formattedDateTime').textContent = formatDateTime('<%= date %>', '<%= time %>');
             generateSeats();
         });
 
-   window.addEventListener("pageshow", function (event) {
-    const paymentDone = sessionStorage.getItem("paymentDone"); // check flag
-
-    if (paymentDone === "true") {
-        if (
-            event.persisted || 
-            (window.performance && window.performance.getEntriesByType("navigation")[0].type === "back_forward")
-        ) {
-            window.location.replace("/");
-        }
-    }
-});
-
-
+        window.addEventListener("pageshow", function (event) {
+            const paymentDone = sessionStorage.getItem("paymentDone");
+            if (paymentDone === "true") {
+                if (
+                    event.persisted || 
+                    (window.performance && window.performance.getEntriesByType("navigation")[0].type === "back_forward")
+                ) {
+                    window.location.replace("/");
+                }
+            }
+        });
     </script>
 </body>
 </html>

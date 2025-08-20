@@ -79,8 +79,23 @@ const viewProducts = async (req, res) => {
     }
 };
 
+const editProductPage = async(req,res)=>{
+   try {
+       const productId = req.params.id;
+       const product = await Product.findById(productId);
+       if (!product) {
+           return res.status(404).json({ success: false, message: 'Product not found' });
+       }
+       return res.render('showEditProduct', {  product });
+   } catch (error) {
+       console.error('Error fetching product for edit:', error);
+       return res.status(500).json({ success: false, message: 'Internal server error' });
+   }
+}
+
 module.exports = {
     getProductPage,
     addProduct,
-    viewProducts
+    viewProducts,
+    editProductPage
 };
