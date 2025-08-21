@@ -48,6 +48,30 @@
             font-size: 16px;
             text-transform: uppercase;
         }
+        .coming-soon-button {
+    background: linear-gradient(135deg, #808080, #A9A9A9); /* Grey gradient */
+    color: white;
+    border: none;
+    padding: 18px;
+    width: 100%;
+    font-size: 18px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: not-allowed; /* Indicate it's disabled */
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.2);
+    opacity: 0.8;
+    transition: 0.3s ease-in-out;
+}
+
+.coming-soon-button:hover {
+    opacity: 1;
+}
+
 
         .share-btn {
             background: none;
@@ -304,9 +328,23 @@
         
 
     <!-- Book Now Button -->
-<button class="book-button" onclick="window.location.href='/setTime/<%= movie._id %>'">
-  BOOK NOW
-</button>
+<% if (movie.status === 'Upcoming') { %>
+    <% if (hasTimings) { %>
+        <!-- Upcoming movie but has show timings -->
+        <button class="book-button" onclick="window.location.href='/setTime/<%= movie._id %>'">
+            BOOK NOW
+        </button>
+    <% } else { %>
+        <!-- Upcoming movie but no timings -->
+        <button class="coming-soon-button" disabled>COMING SOON</button>
+    <% } %>
+<% } else { %>
+    <!-- Running movie -->
+    <button class="book-button" onclick="window.location.href='/setTime/<%= movie._id %>'">
+        BOOK NOW
+    </button>
+<% } %>
+
 
     <script>
       

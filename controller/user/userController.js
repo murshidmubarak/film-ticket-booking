@@ -1,9 +1,9 @@
-const express = require('express');
 const User = require('../../models/userSchema');
 const bcrypt = require('bcrypt');
 const nodemailer = require('nodemailer');
 const Product = require('../../models/productSchema'); // Assuming you have a Product model
 const Order = require('../../models/orderSchema'); // Assuming you have an Order model
+const productTiming = require('../../models/productTimingSchema'); // Assuming you have a ProductTiming model
 
 
 function generateOtp() {
@@ -198,17 +198,66 @@ const logout = async(req,res)=>{
 }
 
 
+// const loadHome = async (req, res) => {
+//     try {
+//         const user = req.session.user;
+
+//         const products = await Product.find({});
+//         const timings = await productTiming.find({});
+//         return res.render('home', { products, user, timings });
+//     } catch (error) {
+//         console.error(error);
+//         res.status(500).json({ message: 'Internal server error' });
+//     }
+// }
+
 const loadHome = async (req, res) => {
     try {
         const user = req.session.user;
 
-        const products = await Product.find({});
-        return res.render('home', { products, user });
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        // Get timings where endDate >= today
+        const validTimings = await productTiming.find({
+            endDate: { $gte: today }
+        }).populate("productId");
+
+        // Collect unique products from valid timings
+        const runningProductsMap = new Map();
+        const productsWithShows = new Map();
+
+        validTimings.forEach(timing => {
+            if (timing.productId) {
+                productsWithShows.set(timing.productId._id.toString(), true);
+
+                if (timing.productId.status === "Running") {
+                    runningProductsMap.set(timing.productId._id.toString(), timing.productId);
+                }
+            }
+        });
+
+        const runningProducts = Array.from(runningProductsMap.values());
+
+        // Fetch all products for upcoming movies section separately
+        const allProducts = await Product.find();
+
+        return res.render("home", {
+            user,
+            products: allProducts,
+            runningProducts,
+            timings: validTimings,
+            productsWithShows // <-- ✅ pass this to EJS
+        });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Internal server error' });
+        res.status(500).json({ message: "Internal server error" });
     }
-}
+};
+
+
+
+
 
 const myOrders = async (req,res)=>{
     try {
@@ -226,21 +275,41 @@ const myOrders = async (req,res)=>{
 
 }
 
-const  movieDetails = async(req,res)=>{
-   try {
-       const movieId = req.params.id;
-       const movie = await Product.findById(movieId).lean();
+// const  movieDetails = async(req,res)=>{
+//    try {
+//        const movieId = req.params.id;
+//        const movie = await Product.findById(movieId).lean();
        
-       if (!movie) {
-           return res.status(404).json({ message: 'Movie not found' });
-       }
-       return res.render('movie-details',{ movie });
-   } catch (error) {
-       console.error(error);
-       res.status(500).json({ message: 'Internal server error' });
-   }
-}
+//        if (!movie) {
+//            return res.status(404).json({ message: 'Movie not found' });
+//        }
+//        return res.render('movie-details',{ movie });
+//    } catch (error) {
+//        console.error(error);
+//        res.status(500).json({ message: 'Internal server error' });
+//    }
+// }
+const movieDetails = async (req, res) => {
+    try {
+        const movieId = req.params.id;
 
+        // Find movie details
+        const movie = await Product.findById(movieId).lean();
+        if (!movie) {
+            return res.status(404).json({ message: 'Movie not found' });
+        }
+
+        // Check if movie has any timings assigned
+        const timings = await productTiming.find({ productId: movieId }).lean();
+
+        const hasTimings = timings.length > 0;
+
+        return res.render('movie-details', { movie, hasTimings });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
 
 module.exports = {
     loadSignup,

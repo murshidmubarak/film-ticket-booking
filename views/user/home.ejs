@@ -384,24 +384,22 @@
     </div>
 
     <!-- Now Running Movies Container -->
-    <div class="movies-container" id="running-movies">
-    <% const runningMovies = products.filter(product => product.status === 'Running'); %>
-
-    <% if (runningMovies.length > 0) { %>
-        <% runningMovies.forEach(product => { %>
+<div class="movies-container" id="running-movies">
+    <% if (runningProducts.length > 0) { %>
+        <% runningProducts.forEach(product => { %>
             <div class="movie-card">
-                     <div class="movie-poster">
-                          <% if (product.images && product.images.length > 0) { %>
-                            <a href="/movies/<%= product._id %>">
+                <div class="movie-poster">
+                    <% if (product.images && product.images.length > 0) { %>
+                        <a href="/movies/<%= product._id %>">
                             <img src="/<%= product.images[0] %>" alt="<%= product.name %> poster" />
-                            </a>
-                      <% } else { %>
-                      <a href="/movies/<%= product._id %>">
-                     <div class="no-image">No Image</div>
-                      </a>
-                     <% } %>
-                     <div class="movie-rating">★</div>
-                     </div>
+                        </a>
+                    <% } else { %>
+                        <a href="/movies/<%= product._id %>">
+                            <div class="no-image">No Image</div>
+                        </a>
+                    <% } %>
+                    <div class="movie-rating">★</div>
+                </div>
 
                 <div class="movie-info">
                     <div class="movie-title"><%= product.name %></div>
@@ -416,34 +414,41 @@
 </div>
 
 
-    <!-- Upcoming Movies Container -->
-    <div class="movies-container hidden" id="upcoming-movies">
-        <% 
-        const upcomingMovies = products.filter(product => product.status === 'Upcoming');
-        upcomingMovies.forEach(product => { 
-        %>
-            <div class="movie-card">
-                <div class="movie-poster">
-                    <% if (product.images && product.images.length > 0) { %>
-                        <img src="/<%= product.images[0] %>" alt="<%= product.name %> poster" />
-                    <% } else { %>
-                        <div class="no-image">No Image</div>
-                    <% } %>
-                    <div class="movie-rating">★</div>
-                </div>
-                <div class="movie-info">
-                    <div class="movie-title"><%= product.name %></div>
-                    <div class="movie-language"><%= product.language %> 
-                         <!-- <%= product.description %> -->
-                        </div>
-                    <!-- <button class="book-button">BOOK</button> -->
-                </div>
+   <!-- Upcoming Movies Container -->
+<div class="movies-container hidden" id="upcoming-movies">
+    <% 
+    const upcomingMovies = products.filter(product => product.status === 'Upcoming');
+    upcomingMovies.forEach(product => { 
+    %>
+        <div class="movie-card">
+            <div class="movie-poster">
+                <% if (product.images && product.images.length > 0) { %>
+                    <!-- <img src="/<%= product.images[0] %>" alt="<%= product.name %> poster" /> -->
+                     <a href="/movies/<%= product._id %>">
+                            <img src="/<%= product.images[0] %>" alt="<%= product.name %> poster" />
+                        </a>
+                <% } else { %>
+                    <div class="no-image">No Image</div>
+                <% } %>
+                <div class="movie-rating">★</div>
             </div>
-        <% }); %>
-        <% if (upcomingMovies.length === 0) { %>
-            <div class="no-movies">No upcoming movies.</div>
-        <% } %>
-    </div>
+            <div class="movie-info">
+                <div class="movie-title"><%= product.name %></div>
+                <div class="movie-language"><%= product.language %></div>
+
+                <% if (productsWithShows.get(product._id.toString())) { %>
+                    <button class="book-button" onclick="location.href='/setTime/<%= product._id %>'">BOOK</button>
+                <% } else { %>
+                    <button class="book-button" disabled>COMING SOON</button>
+                <% } %>
+            </div>
+        </div>
+    <% }); %>
+
+    <% if (upcomingMovies.length === 0) { %>
+        <div class="no-movies">No upcoming movies.</div>
+    <% } %>
+</div>
 
     <script>
         // JavaScript for sidebar toggle

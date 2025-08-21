@@ -185,7 +185,11 @@ const deleteImage = async (req, res) => {
         await product.save();
 
         // Delete the image file from the server
-         const imagePath = path.join(__dirname, "..", "..", "public", "uploads", imageName);
+        //  const imagePath = path.join(__dirname, "..", "..", "public", "uploads", imageName);
+        const fileName = path.basename(imageName);
+
+        const imagePath = path.join(__dirname, "..", "..", "public", "uploads", fileName);
+
          console.log("Deleting image at path:", imagePath);
         fs.unlink(imagePath, (err) => {
             if (err) {

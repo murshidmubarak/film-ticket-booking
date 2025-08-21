@@ -45,4 +45,11 @@ const paymentNoCache = (req, res, next) => {
     next();
 };
 
-module.exports = { noCache, paymentNoCache };
+const adminAuth = (req, res, next) => {
+    if (req.session.user && req.session.user.isAdmin) {
+        return next();
+    }
+    return res.redirect('/admin/login');
+};
+
+module.exports = { noCache, paymentNoCache, adminAuth };
