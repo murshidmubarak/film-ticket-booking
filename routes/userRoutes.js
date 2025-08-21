@@ -39,6 +39,7 @@ router.post('/login', userController.login);
 router.post('/logout',userController.logout)
 router.get('/verify-otp', userController.loadVerifyOtp);
 router.post('/verify-otp', userController.verifyOtp);
+router.post('/resend-otp', userController.resendOtp);
 router.get('/', userController.loadHome);
 router.get('/movies/:id', userController.movieDetails);
 

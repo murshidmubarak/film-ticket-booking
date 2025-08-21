@@ -18,7 +18,7 @@
         }
         .container {
             background-color: white;
-            padding: 30px; /* Increased padding for more space inside the container */
+            padding: 30px;
             border-radius: 5px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
             text-align: center;
@@ -31,16 +31,16 @@
             margin-bottom: 20px;
         }
         .otp-input {
-            width: 90%; /* Reduced width to avoid touching the border */
+            width: 90%;
             padding: 10px;
-            margin: 10px auto; /* Centered with auto margin */
+            margin: 10px auto;
             border: 1px solid #ccc;
             border-radius: 5px;
             font-size: 16px;
-            display: block; /* Ensures the input behaves as a block element */
+            display: block;
         }
         .verify-btn {
-            width: 90%; /* Match the input width for consistency */
+            width: 90%;
             padding: 10px;
             background-color: #f5c518;
             border: none;
@@ -49,11 +49,46 @@
             font-weight: bold;
             color: #333;
             cursor: pointer;
-            margin: 0 auto; /* Center the button */
-            display: block; /* Ensures the button behaves as a block element */
+            margin: 10px auto;
+            display: block;
         }
-        .verify-btn:hover {
+        .verify-btn:hover:not(:disabled) {
             background-color: #e0b415;
+        }
+        .verify-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+            color: #666;
+        }
+        .resend-btn {
+            width: 90%;
+            padding: 10px;
+            background-color: #007bff;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            margin: 5px auto;
+            display: block;
+        }
+        .resend-btn:hover:not(:disabled) {
+            background-color: #0056b3;
+        }
+        .resend-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+            color: #666;
+        }
+        .timer {
+            font-size: 14px;
+            color: #666;
+            margin: 10px 0;
+        }
+        .timer.active {
+            color: #f5c518;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -62,67 +97,204 @@
         <div class="logo">MY CINEMAS</div>
         <form action="/verify-otp" method="POST" id="otp-form">
             <input type="text" class="otp-input" name="otp" placeholder="Enter OTP" >
-            <button type="submit" class="verify-btn">VERIFY</button>
+            <button type="submit" class="verify-btn" id="verify-btn">VERIFY</button>
         </form>
+        <div class="timer" id="timer">Resend OTP in: 01:00</div>
+        <button type="button" class="resend-btn" id="resend-btn" disabled>RESEND OTP</button>
     </div>
 
     <script>
+        let timerInterval;
+        let timeLeft = 60; // 1 minute in seconds
 
-        async function validateForm(e){
+        function saveTimerState() {
+            const endTime = Date.now() + (timeLeft * 1000);
+            sessionStorage.setItem('otpTimerEndTime', endTime.toString());
+        }
+
+        function loadTimerState() {
+            const savedEndTime = sessionStorage.getItem('otpTimerEndTime');
+            if (savedEndTime) {
+                const endTime = parseInt(savedEndTime);
+                const now = Date.now();
+                const remainingTime = Math.max(0, Math.ceil((endTime - now) / 1000));
+                return remainingTime;
+            }
+            return 60; // Default 60 seconds if no saved state
+        }
+
+        function clearTimerState() {
+            sessionStorage.removeItem('otpTimerEndTime');
+        }
+
+        function startTimer() {
+            const timerElement = document.getElementById('timer');
+            const resendBtn = document.getElementById('resend-btn');
+            const verifyBtn = document.getElementById('verify-btn');
+            
+            // Load saved timer state
+            timeLeft = loadTimerState();
+            
+            if (timeLeft <= 0) {
+                // Timer already expired
+                resendBtn.disabled = false;
+                verifyBtn.disabled = true;
+                timerElement.textContent = 'You can now resend OTP';
+                timerElement.classList.remove('active');
+                return;
+            }
+            
+            // Enable verify button and disable resend button
+            verifyBtn.disabled = false;
+            resendBtn.disabled = true;
+            
+            // Show timer
+            timerElement.classList.add('active');
+            
+            timerInterval = setInterval(() => {
+                const minutes = Math.floor(timeLeft / 60);
+                const seconds = timeLeft % 60;
+                
+                timerElement.textContent = `Resend OTP in: ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    clearTimerState();
+                    
+                    // Enable resend button and disable verify button
+                    resendBtn.disabled = false;
+                    verifyBtn.disabled = true;
+                    
+                    timerElement.textContent = 'You can now resend OTP';
+                    timerElement.classList.remove('active');
+                } else {
+                    // Save current state
+                    saveTimerState();
+                }
+                
+                timeLeft--;
+            }, 1000);
+        }
+
+        function resetTimer() {
+            clearInterval(timerInterval);
+            clearTimerState();
+            timeLeft = 60;
+            const endTime = Date.now() + 60000; // 60 seconds from now
+            sessionStorage.setItem('otpTimerEndTime', endTime.toString());
+            startTimer();
+        }
+
+        async function validateForm(e) {
             e.preventDefault();
 
             const form = document.getElementById('otp-form');
 
             try {
-                const response = await fetch('/verify-otp',{
-                    method:'POST',
+                const response = await fetch('/verify-otp', {
+                    method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
                         otp: form.otp.value
                     })
-                })
+                });
 
                 const data = await response.json();
-                if(data.success&&response.ok){
+                if (data.success && response.ok) {
+                    // Clear timer on successful verification
+                    clearInterval(timerInterval);
+                    clearTimerState();
+                    
                     Swal.fire({
-                        icon:"success",
-                        title:"Success",
-                        text:data.message,
+                        icon: "success",
+                        title: "Success",
+                        text: data.message,
                         showConfirmButton: false,
                         timer: 1500
                     })
-                    .then(()=>{
+                    .then(() => {
                         window.location.href = '/';
-                    })
-                }else{
+                    });
+                } else {
                     Swal.fire({
-                        icon:"error",
-                        title:"Error",
-                        text:data.message||"An error occurred while processing your request.error",
+                        icon: "error",
+                        title: "Error",
+                        text: data.message || "An error occurred while processing your request.",
                         showConfirmButton: false,
                         timer: 1500
-                    })
+                    });
                 }
                 
             } catch (error) {
                 console.error('Error:', error);
                 Swal.fire({
-                    icon:"error",
-                    title:"Error",
-                    text:"An error occurred while processing your request.",
+                    icon: "error",
+                    title: "Error",
+                    text: "An error occurred while processing your request.",
                     showConfirmButton: false,
                     timer: 1500
-                })
-                
+                });
             }
-
-
         }
-        const form = document.getElementById('otp-form');
-        form.addEventListener('submit', validateForm);
 
+        async function resendOTP() {
+            try {
+                const response = await fetch('/resend-otp', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+                if (data.success && response.ok) {
+                    Swal.fire({
+                        icon: "success",
+                        title: "OTP Sent",
+                        text: data.message || "New OTP has been sent successfully.",
+                        showConfirmButton: false,
+                        timer: 1500
+                    });
+                    
+                    // Clear the OTP input field
+                    document.querySelector('.otp-input').value = '';
+                    
+                    // Restart the timer
+                    clearInterval(timerInterval);
+                    resetTimer();
+                } else {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Error",
+                        text: data.message || "Failed to resend OTP.",
+                        showConfirmButton: false,
+                        timer: 1500
+                    });
+                }
+                
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: "error",
+                    title: "Error",
+                    text: "An error occurred while resending OTP.",
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+            }
+        }
+
+        // Event listeners
+        const form = document.getElementById('otp-form');
+        const resendBtn = document.getElementById('resend-btn');
+        
+        form.addEventListener('submit', validateForm);
+        resendBtn.addEventListener('click', resendOTP);
+
+        // Start timer when page loads
+        window.addEventListener('load', startTimer);
     </script>
 </body>
 </html>

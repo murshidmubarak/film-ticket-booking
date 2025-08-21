@@ -1,7 +1,6 @@
 const express = require('express');
 const User = require('../../models/userSchema');
 const bcrypt = require('bcrypt');
-const router = express.Router();
 const nodemailer = require('nodemailer');
 const Product = require('../../models/productSchema'); // Assuming you have a Product model
 const Order = require('../../models/orderSchema'); // Assuming you have an Order model
@@ -71,6 +70,7 @@ const signup = async (req, res) => {
         }
 
         req.session.userOtp = otp;
+        req.session.otpExpiry = Date.now() + 60 * 1000; 
         req.session.userData = {
             name,
             email,
@@ -113,7 +113,6 @@ const verifyOtp = async (req, res) => {
         await newUser.save();
 
         req.session.userOtp = null;
-                // req.session.userData = null;
                 req.session.user = {
                     _id: newUser._id,
                     name: newUser.name,
@@ -126,6 +125,26 @@ const verifyOtp = async (req, res) => {
         console.error(error);
         res.status(500).json({ message: 'Internal server error' });
         
+    }
+}
+
+const resendOtp = async(req,res)=>{
+    try {
+        const email = req.session.userData.email;
+        const otp = generateOtp();
+        console.log('Resending OTP:', otp);
+        const emailSent = await sendEmail(email, otp);
+        if (!emailSent) {
+            return res.status(500).json({ success: false, message: 'Failed to resend OTP' });
+        }
+
+        req.session.userOtp = otp;
+        req.session.otpExpiry = Date.now() + 60 * 1000; 
+
+        res.status(200).json({ success: true, message: 'OTP resent successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Internal server error' });
     }
 }
 
@@ -233,5 +252,6 @@ module.exports = {
     loadHome,
     myOrders,
     logout,
-    movieDetails
+    movieDetails,
+    resendOtp
 };

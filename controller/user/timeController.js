@@ -4,65 +4,6 @@ const BookedSeats = require('../../models/bookedSeats'); // Import the BookedSea
 
 
 
-// const loadSetTime = async (req, res) => {
-//     try {
-//         const user = req.session.user;
-//         const productId = req.params.id;
-
-//         if (!user) {
-//             return res.status(401).send('Unauthorized');
-//         }
-
-//         const product = await Product.findById(productId);
-//         if (!product) {
-//             return res.status(404).send('Film not found');
-//         }
-
-//         const allTimings = await ProductTiming.find({ productId });
-
-//         // Current date at midnight (so only today or future)
-//         const today = new Date();
-//         today.setHours(0, 0, 0, 0);
-
-//         const groupedByDate = {};
-
-//         allTimings.forEach(timing => {
-//             const start = new Date(timing.startDate);
-//             start.setHours(0, 0, 0, 0); // normalize date
-
-//             // Only include if date >= today
-//             if (start >= today) {
-//                 const dateKey = start.toDateString();
-
-//                 if (!groupedByDate[dateKey]) {
-//                     groupedByDate[dateKey] = [];
-//                 }
-
-//                 timing.showTimes.forEach(show => {
-//                     const [hours, minutes] = show.time.split(':');
-//                     const showDateTime = new Date(start);
-//                     showDateTime.setHours(hours, minutes, 0, 0)
-
-                    
-//                      groupedByDate[dateKey].push({
-//                         time: show.time,
-//                         screen: show.screen,
-//                          dateTimeISO: showDateTime.toISOString()
-//                     });
-//                 });
-//             }
-//         });
-
-//         res.render('setTime', {
-//             product,
-//             user,
-//             groupedByDate
-//         });
-//     } catch (error) {
-//         console.error('Error loading set time:', error);
-//         res.status(500).send('Internal Server Error');
-//     }
-// };
 const loadSetTime = async (req, res) => {
     try {
         const user = req.session.user;
