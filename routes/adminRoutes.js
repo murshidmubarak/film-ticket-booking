@@ -13,6 +13,9 @@ router.post('/addProduct', upload.array('productImages', 5), productController.a
 router.get('/products', productController.viewProducts);
 router.get('/products/edit/:id', productController.editProductPage);
 // router.post('/products/edit/:id', upload.array('productImages', 5), productController.updateProduct);
+router.post('/editProduct/:id', upload.array('images', 5), productController.updateProduct);
+router.post("/deleteImage", productController.deleteImage);
+
 
 
 

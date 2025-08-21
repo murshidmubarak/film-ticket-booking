@@ -454,7 +454,8 @@
                         <div class="upload-icon">📷</div>
                         <div class="upload-text">Select Product Image</div>
                         <div class="upload-subtext">PNG, JPG, GIF files supported</div>
-                        <input type="file" id="productImage" name="productImage" accept="image/png, image/jpeg, image/jpg" class="file-input" multiple aria-label="Upload product images">
+                        <!-- <input type="file" id="productImage" name="productImage" accept="image/png, image/jpeg, image/jpg" class="file-input" multiple aria-label="Upload product images"> -->
+                         <input type="file" id="productImage" name="images" accept="image/png, image/jpeg, image/jpg" class="file-input" multiple aria-label="Upload product images">
                     </div>
                 </div>
 
@@ -499,7 +500,7 @@
         }
 
         // Delete existing image with confirmation
-        document.querySelectorAll('.delete-icon').forEach(icon => {
+               document.querySelectorAll('.delete-icon').forEach(icon => {
             icon.addEventListener('click', async function() {
                 const imageContainer = this.parentElement;
                 const imageName = imageContainer.dataset.image;
@@ -515,23 +516,50 @@
                 });
 
                 if (result.isConfirmed) {
-                    if (existingImages.has(imageName)) {
-                        deletedImages.add(imageName);
-                        existingImages.delete(imageName);
-                    } else {
-                        croppedImages.delete(imageName);
-                    }
-                    
-                    imageContainer.remove();
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Deleted!',
-                        text: 'Image has been marked for deletion.',
-                        showConfirmButton: false,
-                        timer: 1500
-                    });
+                    try {
+                        const response = await fetch('/admin/deleteImage', {
+                            method: 'POST',
+                            // csrfToken: document.querySelector('meta[name="csrf-token"]').content,
+                            headers: {
+                                'Content-Type': 'application/json',
+                                // 'CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+                            },
+                            body: JSON.stringify({
+                                 productId: productId,               // ✅ match with backend variable name
+                                      imageName: imageName   // ✅ correct key name
 
-                    validateImageCount();
+                                
+                            })
+                        });
+
+                        const result = await response.json();
+                        if (result.success) { // Changed from result.status to result.success
+                            imageContainer.remove(); // Remove the image from DOM
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Deleted!',
+                                text: 'Image has been deleted successfully',
+                                showConfirmButton: false,
+                                timer: 1500
+                            });
+                            validateImageCount(); // Update image count validation
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'Failed to delete image: ' + result.message,
+                                confirmButtonText: 'OK'
+                            });
+                        }
+                    } catch (error) {
+                        console.error('Error deleting image:', error);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'An error occurred while deleting the image',
+                            confirmButtonText: 'OK'
+                        });
+                    }
                 }
             });
         });
