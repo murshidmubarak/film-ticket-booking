@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forgot Password</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .forgot-password-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+            margin: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            color: #333;
+            margin-bottom: 0.5rem;
+            font-size: 1.8rem;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 0.75rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-submit:active {
+            transform: translateY(0);
+        }
+
+        .back-to-login {
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+
+        .back-to-login a {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .back-to-login a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 480px) {
+            .forgot-password-container {
+                padding: 1.5rem;
+                margin: 10px;
+            }
+            
+            .header h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="forgot-password-container">
+        <div class="header">
+            <h1>Forgot Password?</h1>
+            <p>Enter your email address</p>
+        </div>
+
+        <form id="forgotPasswordForm">
+            <div class="form-group">
+                <input 
+                    type="email" 
+                    id="email" 
+                    name="email" 
+                    placeholder="Enter your email address"
+                >
+            </div>
+
+            <button type="submit" class="btn-submit">
+                Send Reset Link
+            </button>
+        </form>
+
+        <div class="back-to-login">
+            <a href="/login">← Back to Login</a>
+        </div>
+    </div>
+
+    <script>
+        //  document.getElementById("forgotPasswordForm").addEventListener("submit", async function (e) {
+        //     e.preventDefault();
+        //     const email = document.getElementById("email").value;
+
+        //     if (!email) {
+        //         Swal.fire("Error", "Please enter your email!", "error");
+        //         return;
+        //     }
+
+        //     const res = await fetch("/forget-password", {
+        //         method: "POST",
+        //         headers: { "Content-Type": "application/json" },
+        //         body: JSON.stringify({ email })
+        //     });
+
+        //     const data = await res.json();
+
+        //     if (data.success) {
+        //         Swal.fire("Success", "OTP sent to your email!", "success")
+        //             .then(() => {
+        //                 window.location.href = "/verify-otp";
+        //             });
+        //     } else {
+        //         Swal.fire("Error", data.message, "error");
+        //     }
+        // });
+
+        document.getElementById("forgotPasswordForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    const email = document.getElementById("email").value;
+    const submitBtn = document.querySelector("#forgotPasswordForm button[type='submit']");
+
+    if (!email) {
+        Swal.fire("Error", "Please enter your email!", "error");
+        return;
+    }
+
+    // ✅ Disable button to prevent multiple requests
+    submitBtn.disabled = true;
+    submitBtn.innerText = "Sending OTP...";
+
+    try {
+        const res = await fetch("/forget-password", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+            Swal.fire("Success", "OTP sent to your email!", "success")
+                .then(() => {
+                    window.location.href = "/verify-otp-forgot"; // Redirect to verify OTP page
+                });
+        } else {
+            Swal.fire("Error", data.message, "error");
+        }
+    } catch (error) {
+        Swal.fire("Error", "Something went wrong. Please try again!", "error");
+    } finally {
+        // ✅ Re-enable button if needed
+        submitBtn.disabled = false;
+        submitBtn.innerText = "Send OTP";
+    }
+});
+
+    </script>
+</body>
+</html>

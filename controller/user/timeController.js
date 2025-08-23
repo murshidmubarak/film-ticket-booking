@@ -115,6 +115,7 @@ const loadBook = async (req, res) => {
         // Flatten seat arrays
         const bookedSeatsList = bookedSeats.flatMap(bs => bs.seats);
         res.render('book', {
+            price: product.price,
             product,
             user,
             productTiming,
@@ -124,6 +125,7 @@ const loadBook = async (req, res) => {
             tickets,
             bookedSeats: bookedSeatsList
         });
+        console.log('price:', product.price);
 
 
 

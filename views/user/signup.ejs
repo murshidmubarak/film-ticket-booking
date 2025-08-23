@@ -212,8 +212,14 @@
             }
         }
 
-      async function validateForm(e) {
+
+
+async function validateForm(e) {
   e.preventDefault();
+
+  const submitBtn = document.querySelector('#signupForm button[type="submit"]');
+  submitBtn.disabled = true; // 🔹 Disable button immediately
+    submitBtn.innerText = "Registering..."; // 🔹 Optional: Change button text to indicate progress
 
   const nameInput = document.getElementById('name');
   const emailInput = document.getElementById('email');
@@ -297,24 +303,25 @@
         })
       });
 
-      const result = await response.json(); // Parse JSON regardless of status
+      const result = await response.json();
 
       if (response.ok && result.success) {
         Swal.fire({
           icon: 'success',
           title: 'Success',
-          text: result.message, // Use backend-provided message
+          text: result.message,
           timer: 3000,
           showConfirmButton: false
         }).then(() => {
-          window.location.href = '/verify-otp'; // Redirect to verify page
+          window.location.href = '/verify-otp';
         });
       } else {
         Swal.fire({
           icon: 'error',
           title: 'Error',
-          text: result.message || 'Signup failed. Please try again.', // Fallback message
+          text: result.message || 'Signup failed. Please try again.',
         });
+        submitBtn.disabled = false; // 🔹 Re-enable button on failure
       }
     } catch (error) {
       console.error('Error during signup:', error);
@@ -323,11 +330,17 @@
         title: 'Error',
         text: 'Network error occurred. Please check your connection and try again.',
       });
+      submitBtn.disabled = false; // 🔹 Re-enable button on error
     }
+  } else {
+    submitBtn.disabled = false; // 🔹 Re-enable if validation failed
   }
 }
-        const form = document.getElementById('signupForm');
-        form.addEventListener('submit', validateForm);
+
+const form = document.getElementById('signupForm');
+form.addEventListener('submit', validateForm);
+
+    
     </script>
 </body>
 </html>

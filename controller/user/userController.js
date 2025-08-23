@@ -311,6 +311,165 @@ const movieDetails = async (req, res) => {
     }
 };
 
+const forgotPasspage = async(req,res)=>{
+
+    try {
+        res.render('forgotPasspage')
+        
+    } catch (error) {
+        console.log("error getting forgot pass page",err)
+        
+    }
+
+}
+
+const forgotPassPost = async (req, res) => {
+    try {
+        console.log("forgotPassPost called");
+        const { email } = req.body;
+
+        // Check if user exists
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+
+        // Generate OTP
+        const otp = generateOtp();
+        console.log("Generated OTP:", otp);
+
+        // Send OTP via email
+        const emailSent = await sendEmail(email, otp);
+        if (!emailSent) {
+            return res.status(500).json({ success: false, message: 'Failed to send OTP' });
+        }
+
+        // Store OTP and email in session
+        req.session.resetOtp = otp;
+        req.session.otpExpiry = Date.now() + 5 * 60 * 1000;
+        req.session.resetEmail = email;
+        console.log("OTP and email stored in session");
+
+        return res.status(200).json({ success: true, message: 'OTP sent to your email' });
+
+    } catch (error) {
+        console.error("Error in forgotPassPost:", error);
+        return res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+};
+
+const loadVerifyOtpForgot = (req, res) => {
+    try {
+        res.render('verify-otp-forgot');
+    } catch (error) {
+        console.error("Error loading verify OTP forgot page:", error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
+const verifyOtpForgot = async (req, res) => {
+    try {
+        const { otp } = req.body;
+
+        if (!otp) {
+            return res.status(400).json({ success: false, message: 'OTP is required' });
+        }
+
+        if (String(otp) !== String(req.session.resetOtp)) {
+            return res.status(400).json({ success: false, message: 'Invalid OTP' });
+        }
+
+        // Clear OTP from session
+        req.session.resetOtp = null;
+
+        // Redirect to reset password page
+        res.status(200).json({ success: true, message: 'OTP verified successfully' });
+
+    } catch (error) {
+        console.error("Error in verifyOtpForgot:", error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
+const resendOtpForgot = async (req, res) => {
+    try {
+        const email = req.session.resetEmail;
+
+        if (!email) {
+            return res.status(400).json({ success: false, message: 'Email is required' });
+        }
+
+        // Generate new OTP
+        const otp = generateOtp();
+        console.log("Generated OTP:", otp);
+
+        // Send new OTP via email
+        const emailSent = await sendEmail(email, otp);
+        if (!emailSent) {
+            return res.status(500).json({ success: false, message: 'Failed to send OTP' });
+        }
+
+        // Update OTP and expiry in session
+        req.session.resetOtp = otp;
+        req.session.otpExpiry = Date.now() + 5 * 60 * 1000;
+        console.log("New OTP and email stored in session");
+
+        return res.status(200).json({ success: true, message: 'New OTP sent to your email' });
+
+    } catch (error) {
+        console.error("Error in resendOtpForgot:", error);
+        return res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+};
+
+const resetPassword = async(req,res)=>{
+    try {
+        console.log("resetPassword called");
+        return res.render('reset-password');
+    } catch (error) {
+        console.error("Error in resetPassword:", error);
+        return res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+}
+
+const updatePassword = async(req,res)=>{
+    try {
+        console.log("updatePassword called");
+        const { password } = req.body;
+
+
+        const email = req.session.resetEmail;
+        if (!email) {
+            return res.status(400).json({ success: false, message: 'Session expired. Please try again.' });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        const user = await User.findOneAndUpdate(
+            { email },
+            { password: hashedPassword },
+            { new: true }
+        );
+
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+
+        req.session.resetEmail = null;
+        req.session.user = {
+            _id: user._id,
+            email: user.email,
+            name: user.name
+        };
+
+        return res.status(200).json({ success: true, message: 'Password updated successfully. Please log in.' });
+
+    } catch (error) {
+        console.error("Error in updatePassword:", error);
+        return res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+};
+
 module.exports = {
     loadSignup,
     signup,
@@ -322,5 +481,12 @@ module.exports = {
     myOrders,
     logout,
     movieDetails,
-    resendOtp
+    resendOtp,
+    forgotPasspage,
+    forgotPassPost,
+    loadVerifyOtpForgot,
+    verifyOtpForgot,
+    resendOtpForgot,
+    resetPassword,
+    updatePassword
 };

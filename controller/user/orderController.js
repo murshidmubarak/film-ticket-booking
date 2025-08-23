@@ -137,7 +137,31 @@ const verifyPayment = async (req, res) => {
     }
 };
 
+const markPaymentFailed = async (req, res) => {
+    try {
+        const { razorpay_order_id } = req.body;
+
+        const order = await Order.findOne({ razorpayOrderId: razorpay_order_id });
+        if (!order) {
+            return res.status(404).json({ success: false, message: "Order not found!" });
+        }
+
+        // Mark order as failed only if not already completed
+        if (order.status !== "completed") {
+            order.status = "failed";
+            await order.save();
+        }
+
+        res.json({ success: true, message: "Payment status marked as failed." });
+    } catch (error) {
+        console.error("Error marking payment failed:", error);
+        res.status(500).json({ success: false, message: "Internal server error" });
+    }
+};
+
+
 module.exports = {
     createOrder,
-    verifyPayment
+    verifyPayment,
+    markPaymentFailed
 };

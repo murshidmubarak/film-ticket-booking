@@ -24,7 +24,7 @@
         <div><strong>Seats :</strong> <%= selectedSeats.join(', ') %></div>
         <div><strong><%= selectedSeats.length %> Ticket</strong> <span class="total">₹<%= totalAmount %> ✓</span></div>
         <div class="total">₹<%= totalAmount %></div>
-        <button class="continue-btn" id="payBtn">CONTINUE</button>
+        <button class="continue-btn" id="payBtn">proceed to payment</button>
     </div>
 
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
@@ -138,21 +138,35 @@ document.getElementById("payBtn").onclick = async function () {
                 paymentInProgress = false;
             },
             modal: {
-                ondismiss: function() {
-                    paymentInProgress = false;
-                    // Clear browser history and redirect to home
-                    history.replaceState(null, null, location.href);
-                    Swal.fire({
-                        icon: 'info',
-                        title: 'Payment Cancelled',
-                        text: 'You cancelled the payment process.',
-                        confirmButtonText: 'Go to Home'
-                    }).then(() => {
-                        window.location.replace('/');
-                         sessionStorage.setItem("paymentDone", "true");
-                    });
-                }
-            },
+    ondismiss: async function () {
+        paymentInProgress = false;
+
+        try {
+            // Call backend API to mark payment as failed
+            await fetch("/payment-failed", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ razorpay_order_id: orderData.id })
+            });
+        } catch (err) {
+            console.error("Failed to update payment status:", err);
+        }
+
+        // Clear browser history and show SweetAlert
+        history.replaceState(null, null, location.href);
+
+        Swal.fire({
+            icon: 'info',
+            title: 'Payment Cancelled',
+            text: 'You cancelled the payment process.',
+            confirmButtonText: 'Go to Home'
+        }).then(() => {
+            sessionStorage.setItem("paymentDone", "true");
+            window.location.replace('/');
+        });
+    }
+},
+
             theme: { color: "#3399cc" }
         };
 

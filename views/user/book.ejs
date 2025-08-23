@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Select Seats - <%= product.name %></title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
         * {
             margin: 0;
@@ -14,113 +14,126 @@
         body {
             font-family: 'Arial', sans-serif;
             background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-            min-height: 100vh;
+            height: 100vh;
             color: white;
-            padding-bottom: 80px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }
         
         .header {
             background: rgba(0,0,0,0.8);
-            padding: 15px 20px;
+            padding: 6px 10px;
             display: flex;
             align-items: center;
             position: relative;
+            flex-shrink: 0;
         }
         
         .back-btn {
             background: none;
             border: none;
             color: white;
-            font-size: 24px;
+            font-size: 16px;
             cursor: pointer;
-            margin-right: 15px;
+            margin-right: 6px;
         }
         
         .cinema-logo {
             position: absolute;
             left: 50%;
             transform: translateX(-50%);
-            font-size: 20px;
+            font-size: 12px;
             font-weight: bold;
             color: #d4a017;
         }
         
         .movie-info {
             background: rgba(0,0,0,0.6);
-            padding: 20px;
+            padding: 6px 10px;
             text-align: left;
+            flex-shrink: 0;
         }
         
         .movie-title {
-            font-size: 24px;
+            font-size: 14px;
             font-weight: bold;
-            margin-bottom: 10px;
+            margin-bottom: 3px;
             text-transform: uppercase;
         }
         
         .show-details {
-            font-size: 16px;
+            font-size: 9px;
             opacity: 0.9;
-            margin-bottom: 5px;
+            margin-bottom: 2px;
         }
         
         .screen-info {
-            font-size: 18px;
+            font-size: 10px;
             font-weight: bold;
-            margin-top: 10px;
+            margin-top: 3px;
         }
         
         .seating-area {
-            padding: 20px;
+            padding: 4px;
             text-align: center;
             background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
-            margin: 20px;
-            border-radius: 15px;
+            margin: 3px;
+            border-radius: 6px;
             backdrop-filter: blur(10px);
-            margin-bottom: 100px;
+            flex-grow: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
         }
         
         .screen-indicator {
             background: linear-gradient(45deg, #00bcd4, #0097a7);
             color: white;
-            padding: 15px 40px;
-            border-radius: 25px;
-            font-size: 16px;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 9px;
             font-weight: bold;
             letter-spacing: 1px;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 15px rgba(0,188,212,0.4);
+            margin-bottom: 4px;
+            box-shadow: 0 2px 6px rgba(0,188,212,0.4);
+            flex-shrink: 0;
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
         
         .seats-container {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 8px;
-            margin-bottom: 20px;
+            gap: 1px;
+            flex-grow: 1;
+            justify-content: flex-start;
+            max-height: calc(100% - 40px);
         }
         
         .seat-row {
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 4px;
-            margin-bottom: 4px;
+            gap: 1px;
         }
         
         .row-label {
-            width: 30px;
+            width: 18px;
             text-align: center;
             font-weight: bold;
-            font-size: 14px;
+            font-size: 9px;
             color: #d4a017;
         }
         
         .seat {
-            width: 28px;
-            height: 28px;
-            border: 2px solid #ccc;
-            border-radius: 6px;
+            width: 12px;
+            height: 12px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
             cursor: pointer;
             transition: all 0.2s ease;
             position: relative;
@@ -143,7 +156,7 @@
             border-color: #4caf50;
             color: white;
             font-weight: bold;
-            font-size: 10px;
+            font-size: 7px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -164,21 +177,22 @@
         .legend {
             display: flex;
             justify-content: center;
-            gap: 30px;
-            margin: 20px 0;
-            font-size: 14px;
+            gap: 8px;
+            margin: 4px 0;
+            font-size: 8px;
+            flex-shrink: 0;
         }
         
         .legend-item {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 3px;
         }
         
         .legend-seat {
-            width: 16px;
-            height: 16px;
-            border-radius: 3px;
+            width: 8px;
+            height: 8px;
+            border-radius: 2px;
             border: 1px solid #ddd;
         }
         
@@ -188,7 +202,7 @@
         
         .booking-summary {
             background: rgba(0,0,0,0.9);
-            padding: 12px 20px;
+            padding: 4px 8px;
             position: fixed;
             bottom: 0;
             left: 0;
@@ -199,7 +213,8 @@
             backdrop-filter: blur(10px);
             border-top: 1px solid rgba(255,255,255,0.2);
             z-index: 100;
-            max-height: 70px;
+            max-height: 30px;
+            flex-shrink: 0;
         }
         
         .selected-seats {
@@ -208,15 +223,15 @@
         }
         
         .selected-seats > div:first-child {
-            font-size: 12px;
+            font-size: 8px;
             color: #ccc;
-            margin-bottom: 2px;
+            margin-bottom: 1px;
         }
         
         .seat-numbers {
             color: #4caf50;
             font-weight: bold;
-            font-size: 14px;
+            font-size: 9px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -224,12 +239,12 @@
         
         .total-amount {
             text-align: center;
-            margin: 0 15px;
-            min-width: 80px;
+            margin: 0 6px;
+            min-width: 40px;
         }
         
         .price {
-            font-size: 20px;
+            font-size: 10px;
             font-weight: bold;
             color: #d4a017;
         }
@@ -237,20 +252,20 @@
         .confirm-btn {
             background: linear-gradient(45deg, #00bcd4, #0097a7);
             color: white;
-            padding: 10px 20px;
+            padding: 4px 8px;
             border: none;
-            border-radius: 20px;
-            font-size: 14px;
+            border-radius: 10px;
+            font-size: 9px;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0,188,212,0.4);
+            box-shadow: 0 2px 6px rgba(0,188,212,0.4);
             white-space: nowrap;
         }
         
         .confirm-btn:hover:not(:disabled) {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0,188,212,0.6);
+            box-shadow: 0 4px 10px rgba(0,188,212,0.6);
         }
         
         .confirm-btn:disabled {
@@ -260,98 +275,91 @@
         }
         
         @media (max-width: 768px) {
-            body {
-                padding-bottom: 90px;
-            }
-            
             .seat {
-                width: 22px;
-                height: 22px;
-                font-size: 8px;
+                width: 14px;
+                height: 14px;
+                font-size: 7px;
             }
             
             .row-label {
-                width: 25px;
-                font-size: 12px;
+                width: 18px;
+                font-size: 9px;
             }
             
             .legend {
-                gap: 15px;
-                font-size: 12px;
-                flex-wrap: wrap;
-                justify-content: center;
+                gap: 8px;
+                font-size: 8px;
+                margin: 3px 0;
             }
             
             .booking-summary {
-                flex-direction: row;
-                padding: 10px 15px;
-                max-height: 80px;
-                gap: 10px;
-            }
-            
-            .selected-seats {
-                flex: 1;
-                min-width: 0;
+                padding: 4px 8px;
+                max-height: 32px;
             }
             
             .selected-seats > div:first-child {
-                font-size: 11px;
+                font-size: 8px;
             }
             
             .seat-numbers {
-                font-size: 12px;
+                font-size: 9px;
             }
             
             .total-amount {
-                margin: 0 10px;
-                min-width: 70px;
+                margin: 0 6px;
+                min-width: 45px;
             }
             
             .price {
-                font-size: 18px;
+                font-size: 10px;
             }
             
             .confirm-btn {
-                padding: 8px 16px;
-                font-size: 12px;
-                border-radius: 15px;
+                padding: 4px 8px;
+                font-size: 9px;
+                border-radius: 10px;
             }
             
             .movie-title {
-                font-size: 20px;
+                font-size: 13px;
             }
             
             .seating-area {
-                margin: 10px;
-                padding: 15px;
-                margin-bottom: 100px;
+                margin: 3px;
+                padding: 4px;
             }
             
             .screen-indicator {
-                padding: 12px 30px;
-                font-size: 14px;
+                padding: 4px 12px;
+                font-size: 9px;
+                margin-bottom: 3px;
+            }
+            
+            .seats-container {
+                transform: scale(0.8);
+                max-height: calc(100% - 35px);
             }
         }
         
         @media (max-width: 480px) {
             .seat {
-                width: 18px;
-                height: 18px;
-                gap: 2px;
+                width: 12px;
+                height: 12px;
+                gap: 1px;
             }
             
             .seat-row {
-                gap: 2px;
+                gap: 1px;
             }
             
             .row-label {
-                width: 20px;
-                font-size: 10px;
+                width: 16px;
+                font-size: 8px;
             }
             
             .booking-summary {
-                padding: 8px 12px;
-                max-height: 70px;
+                padding: 4px 6px;
+                max-height: 30px;
             }
             
             .selected-seats > div:first-child {
@@ -359,29 +367,169 @@
             }
             
             .confirm-btn {
-                padding: 6px 12px;
-                font-size: 11px;
+                padding: 4px 6px;
+                font-size: 8px;
             }
             
             .price {
-                font-size: 16px;
+                font-size: 9px;
+            }
+            
+            .movie-title {
+                font-size: 12px;
+            }
+            
+            .show-details {
+                font-size: 9px;
+            }
+            
+            .screen-info {
+                font-size: 10px;
+            }
+            
+            .seats-container {
+                transform: scale(0.75);
+                max-height: calc(100% - 30px);
+            }
+            
+            .legend {
+                gap: 6px;
+                font-size: 7px;
+                margin: 2px 0;
+            }
+            
+            .legend-seat {
+                width: 8px;
+                height: 8px;
             }
         }
         
         @media (max-height: 600px) and (orientation: landscape) {
-            body {
-                padding-bottom: 70px;
-            }
-            
             .seating-area {
-                margin: 10px;
-                padding: 10px;
-                margin-bottom: 80px;
+                margin: 3px;
+                padding: 3px;
             }
             
             .booking-summary {
-                max-height: 60px;
-                padding: 8px 15px;
+                max-height: 28px;
+                padding: 4px 6px;
+            }
+            
+            .seat {
+                width: 12px;
+                height: 12px;
+            }
+            
+            .row-label {
+                font-size: 8px;
+            }
+            
+            .screen-indicator {
+                padding: 4px 8px;
+                font-size: 8px;
+            }
+            
+            .seats-container {
+                transform: scale(0.75);
+                max-height: calc(100% - 30px);
+            }
+        }
+        
+        @media (min-width: 769px) {
+            .header {
+                padding: 8px 12px;
+            }
+            
+            .back-btn {
+                font-size: 18px;
+                margin-right: 8px;
+            }
+            
+            .cinema-logo {
+                font-size: 14px;
+            }
+            
+            .movie-info {
+                padding: 8px 12px;
+            }
+            
+            .movie-title {
+                font-size: 16px;
+            }
+            
+            .show-details {
+                font-size: 11px;
+            }
+            
+            .screen-info {
+                font-size: 12px;
+            }
+            
+            .seating-area {
+                padding: 8px;
+                margin: 6px;
+                max-height: calc(100vh - 150px);
+            }
+            
+            .screen-indicator {
+                padding: 6px 15px;
+                font-size: 11px;
+                position: static;
+            }
+            
+            .seats-container {
+                gap: 3px;
+                transform: scale(0.95);
+                max-height: calc(100% - 50px);
+                overflow: hidden;
+            }
+            
+            .seat {
+                width: 16px;
+                height: 16px;
+                font-size: 8px;
+            }
+            
+            .row-label {
+                width: 18px;
+                font-size: 9px;
+            }
+            
+            .legend {
+                gap: 10px;
+                font-size: 9px;
+            }
+            
+            .legend-seat {
+                width: 10px;
+                height: 10px;
+            }
+            
+            .booking-summary {
+                padding: 6px 12px;
+                max-height: 40px;
+            }
+            
+            .selected-seats > div:first-child {
+                font-size: 9px;
+            }
+            
+            .seat-numbers {
+                font-size: 11px;
+            }
+            
+            .total-amount {
+                margin: 0 8px;
+                min-width: 50px;
+            }
+            
+            .price {
+                font-size: 14px;
+            }
+            
+            .confirm-btn {
+                padding: 5px 10px;
+                font-size: 11px;
             }
         }
     </style>
@@ -437,7 +585,7 @@
     <script>
         // Seat layout configurations
         const defaultSeatLayout = {
-            pricePerSeat: <%= product.ticketPrice || 150 %>,
+            pricePerSeat: <%= product.price || 150 %>,
             rows: [
                 { row: 'A', seats: 21, gaps: [] },
                 { row: 'B', seats: 18, gaps: [{ start: 9, size: 3 }] },
@@ -479,7 +627,7 @@
         };
 
         const screen2SeatLayout = {
-            pricePerSeat: <%= product.ticketPrice || 150 %>,
+            pricePerSeat: <%= product.price || 150 %>,
             rows: [
                 { row: 'A', seats: 17, gaps: [] },
                 { row: 'B', seats: 15, gaps: [{ start: 7, size: 2 }] },
@@ -673,17 +821,22 @@
             generateSeats();
         });
 
-        window.addEventListener("pageshow", function (event) {
-            const paymentDone = sessionStorage.getItem("paymentDone");
-            if (paymentDone === "true") {
-                if (
-                    event.persisted || 
-                    (window.performance && window.performance.getEntriesByType("navigation")[0].type === "back_forward")
-                ) {
-                    window.location.replace("/");
-                }
-            }
-        });
+       window.addEventListener("pageshow", function (event) {
+    // Check if payment is done OR failed
+    const paymentDone = sessionStorage.getItem("paymentDone");
+
+    if (paymentDone === "true") {
+        // If the user tries to navigate back, redirect to home
+        if (
+            event.persisted || 
+            (window.performance && window.performance.getEntriesByType("navigation")[0].type === "back_forward")
+        ) {
+            window.location.replace("/");
+        }
+    }
+});
+
+
     </script>
 </body>
 </html>

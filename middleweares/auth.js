@@ -52,4 +52,19 @@ const adminAuth = (req, res, next) => {
     return res.redirect('/admin/login');
 };
 
-module.exports = { noCache, paymentNoCache, adminAuth };
+const userAuth = (req, res, next) => {
+    if (req.session.user) {
+        return next();
+    }
+    return res.redirect('/login');
+};
+
+const isLogin=async (req,res,next)=>{
+    if(req.session.user){
+        res.redirect('/')
+    }else{
+        next()           
+    }
+}
+
+module.exports = { noCache, paymentNoCache, adminAuth, userAuth,isLogin };

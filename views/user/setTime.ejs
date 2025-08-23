@@ -25,10 +25,9 @@
             padding: 15px;
         }
         .available.soldout {
-    background-color: #dc3545; /* red */
-    cursor: not-allowed;
-}
-
+            background-color: #dc3545; /* red */
+            cursor: not-allowed;
+        }
         .date-btn {
             margin: 5px;
             padding: 10px 15px;
@@ -135,39 +134,31 @@
     <div class="header">Cinema Booking</div>
 
     <div class="date-select">
-        <% const today = new Date().toDateString(); %>
-        <% for (const date in groupedByDate) { %>
+        <% const dates = Object.keys(groupedByDate); %>
+        <% const firstDate = dates[0]; %>
+        <% dates.forEach((date, index) => { %>
             <button 
-                class="date-btn <%= date === today ? 'today' : '' %>" 
+                class="date-btn <%= date === firstDate ? 'today' : '' %>" 
                 data-date="<%= date %>"><%= date %>
             </button>
-        <% } %>
+        <% }) %>
     </div>
 
     <div id="showtimes-container">
         <% for (const date in groupedByDate) { %>
-            <div class="time-slots date-group" data-date="<%= date %>" style="display: <%= date === today ? 'block' : 'none' %>;">
+            <div class="time-slots date-group" data-date="<%= date %>" style="display: <%= date === firstDate ? 'block' : 'none' %>;">
                 <% groupedByDate[date].forEach(slot => { %>
-                    <!-- <div class="screen-info">Screen <%= slot.screen %></div> -->
                     <div class="time-slot">
-                        <!-- <button 
+                        <button 
                             class="available" 
-                            onclick="showSeatSelection('<%= slot.time %>', '<%= slot.screen %>', '<%= date %>', '<%= product._id %>', '<%= product.name %>')">
+                            data-datetime="<%= slot.dateTimeISO %>"
+                            data-available="<%= slot.availableSeats %>"
+                            onclick="showSeatSelection('<%= slot.time %>', '<%= slot.screen %>', '<%= date %>', '<%= product._id %>', '<%= product.name %>', <%= slot.availableSeats %>)">
                             <%= slot.time %>
-                        </button> -->
-                <button 
-  class="available" 
-  data-datetime="<%= slot.dateTimeISO %>"
-  data-available="<%= slot.availableSeats %>"
-  onclick="showSeatSelection('<%= slot.time %>', '<%= slot.screen %>', '<%= date %>', '<%= product._id %>', '<%= product.name %>', <%= slot.availableSeats %>)">
-  <%= slot.time %>
-</button>
-
-<div class="screen-info">
-    Screen <%= slot.screen %> - Available: <%= slot.availableSeats %> seats
-</div>
-
-
+                        </button>
+                        <div class="screen-info">
+                            Screen <%= slot.screen %> - Available: <%= slot.availableSeats %> seats
+                        </div>
                     </div>
                 <% }) %>
             </div>
@@ -179,26 +170,15 @@
             <span class="close" onclick="closeModal()">&times;</span>
             <h2 id="movieTitle"><%= product.name %></h2>
             <div id="showDetails"></div>
-            <!-- <div class="ticket-counter">
+            <div class="ticket-counter">
                 <button onclick="updateTickets(-1)">-</button>
                 <span id="ticketCount">1</span>
                 <button id="plusBtn" onclick="updateTickets(1)">+</button>
-            </div> -->
-            <!-- <button class="pick-seats-btn" onclick="pickSeats()">Pick Your Seats</button> -->
-
-            <div class="ticket-counter">
-    <button onclick="updateTickets(-1)">-</button>
-    <span id="ticketCount">1</span>
-    <button id="plusBtn" onclick="updateTickets(1)">+</button>
-</div>
-
-<!-- 🔹 NEW LINE: shows max seats allowed -->
-<p style="font-size: 14px; color: gray; margin-top: 5px;">
-    Max <span id="maxSeatsText">7</span> seats available
-</p>
-
-<button class="pick-seats-btn" onclick="pickSeats()">Pick Your Seats</button>
-
+            </div>
+            <p style="font-size: 14px; color: gray; margin-top: 5px;">
+                Max <span id="maxSeatsText">7</span> seats available
+            </p>
+            <button class="pick-seats-btn" onclick="pickSeats()">Pick Your Seats</button>
         </div>
     </div>
 
@@ -216,6 +196,54 @@
         let selectedDate = '';
         let selectedTime = ''; // Store original time for display
 
+        // Function to select the first date and show its time slots
+        function selectFirstDate() {
+            const firstButton = dateButtons[0];
+            if (firstButton) {
+                const date = firstButton.dataset.date;
+                // Remove 'today' class from all buttons
+                dateButtons.forEach(btn => btn.classList.remove('today'));
+                // Add 'today' class to the first button
+                firstButton.classList.add('today');
+                // Hide all date groups
+                allGroups.forEach(group => group.style.display = 'none');
+                // Show the first date's group
+                const firstGroup = document.querySelector(`.date-group[data-date="${date}"]`);
+                if (firstGroup) {
+                    firstGroup.style.display = 'block';
+                }
+            }
+        }
+
+        // Call selectFirstDate on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            selectFirstDate();
+
+            // Existing logic for disabling buttons
+            const now = new Date();
+            document.querySelectorAll('.available').forEach(btn => {
+                const showTime = new Date(btn.dataset.datetime);
+                const diffMinutes = (showTime - now) / (1000 * 60);
+                const availableSeats = parseInt(btn.dataset.available, 10);
+
+                // Case 1: Show is sold out
+                if (availableSeats === 0) {
+                    btn.disabled = true;
+                    btn.classList.add('soldout');
+                }
+                // Case 2: Show starting within 15 mins
+                else if (diffMinutes <= 15 && diffMinutes > 0) {
+                    btn.disabled = true;
+                    btn.classList.add('soldout');
+                }
+                // Case 3: Show already started
+                else if (diffMinutes <= 0) {
+                    btn.disabled = true;
+                    btn.classList.add('soldout');
+                }
+            });
+        });
+
         dateButtons.forEach(btn => {
             btn.addEventListener('click', () => {
                 const date = btn.dataset.date;
@@ -228,19 +256,17 @@
 
         let maxSeatsAllowed = 7; // default
 
-function showSeatSelection(time, screen, date, movieId, movieName, availableSeats) {
-    selectedScreen = screen;
-    selectedDate = date;
-    selectedTime = time;
-    maxSeatsAllowed = Math.min(7, availableSeats); // 👈 cap by available seats
-    ticketCount = 1; // reset to 1
-    document.getElementById('maxSeatsText').textContent = maxSeatsAllowed;
-
-    document.getElementById('ticketCount').textContent = ticketCount;
-    document.getElementById('showDetails').textContent = `${date} ${time}`;
-    modal.style.display = 'block';
-}
-
+        function showSeatSelection(time, screen, date, movieId, movieName, availableSeats) {
+            selectedScreen = screen;
+            selectedDate = date;
+            selectedTime = time;
+            maxSeatsAllowed = Math.min(7, availableSeats); // cap by available seats
+            ticketCount = 1; // reset to 1
+            document.getElementById('maxSeatsText').textContent = maxSeatsAllowed;
+            document.getElementById('ticketCount').textContent = ticketCount;
+            document.getElementById('showDetails').textContent = `${date} ${time}`;
+            modal.style.display = 'block';
+        }
 
         function closeModal() {
             modal.style.display = 'none';
@@ -248,60 +274,31 @@ function showSeatSelection(time, screen, date, movieId, movieName, availableSeat
             selectedDate = '';
         }
 
-   function updateTickets(change) {
-    ticketCount = Math.max(1, ticketCount + change);
-    document.getElementById('ticketCount').textContent = ticketCount;
-
-    const plusBtn = document.getElementById('plusBtn');
-    plusBtn.disabled = ticketCount === maxSeatsAllowed;
-
-    const minusBtn = document.querySelector('.ticket-counter button:first-child');
-    minusBtn.disabled = ticketCount === 1; // disable when only 1 ticket
-}
-
-
-        // function pickSeats() {
-        //     const ticketCount = document.getElementById('ticketCount').textContent;
-        //     const movieId = '<%= product._id %>';
-        //     const time = document.getElementById('showDetails').textContent.split(' ')[1];
-        //     // Convert date to YYYY-MM-DD format
-        //     let date;
-        //     try {
-        //         const dateObj = new Date(selectedDate);
-        //         date = dateObj.toISOString().split('T')[0]; // e.g., "2025-08-07"
-        //     } catch (e) {
-        //         console.error('Error formatting date:', e);
-        //         date = selectedDate; // Fallback to original date string
-        //     }
-        //     const screen = selectedScreen;
-        //     const time = selectedTime; // Use the original time string
-        //     // window.location.href = `/book/${movieId}?time=${encodeURIComponent(time)}&date=${encodeURIComponent(date)}&screen=${encodeURIComponent(screen)}&tickets=${ticketCount}`;
-        //                 window.location.href = `/book/${movieId}?time=${encodeURIComponent(time)}&date=${encodeURIComponent(date)}&screen=${encodeURIComponent(screen)}&tickets=${ticketCount}`;
-
-        //     closeModal();
-
-        // }
+        function updateTickets(change) {
+            ticketCount = Math.max(1, ticketCount + change);
+            document.getElementById('ticketCount').textContent = ticketCount;
+            const plusBtn = document.getElementById('plusBtn');
+            plusBtn.disabled = ticketCount === maxSeatsAllowed;
+            const minusBtn = document.querySelector('.ticket-counter button:first-child');
+            minusBtn.disabled = ticketCount === 1; // disable when only 1 ticket
+        }
 
         function pickSeats() {
-    const ticketCount = document.getElementById('ticketCount').textContent;
-    const movieId = '<%= product._id %>';
-
-    // Convert date to YYYY-MM-DD format
-    let date;
-    try {
-        const dateObj = new Date(selectedDate);
-        date = dateObj.toISOString().split('T')[0];
-    } catch (e) {
-        console.error('Error formatting date:', e);
-        date = selectedDate;
-    }
-
-    const screen = selectedScreen;
-    const time = selectedTime;
-
-    window.location.href = `/book/${movieId}?time=${encodeURIComponent(time)}&date=${encodeURIComponent(date)}&screen=${encodeURIComponent(screen)}&tickets=${ticketCount}`;
-    closeModal();
-}
+            const ticketCount = document.getElementById('ticketCount').textContent;
+            const movieId = '<%= product._id %>';
+            let date;
+            try {
+                const dateObj = new Date(selectedDate);
+                date = dateObj.toISOString().split('T')[0];
+            } catch (e) {
+                console.error('Error formatting date:', e);
+                date = selectedDate;
+            }
+            const screen = selectedScreen;
+            const time = selectedTime;
+            window.location.href = `/book/${movieId}?time=${encodeURIComponent(time)}&date=${encodeURIComponent(date)}&screen=${encodeURIComponent(screen)}&tickets=${ticketCount}`;
+            closeModal();
+        }
 
         window.onclick = function(event) {
             if (event.target == modal) {
@@ -309,48 +306,14 @@ function showSeatSelection(time, screen, date, movieId, movieName, availableSeat
             }
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-    const now = new Date();
-
-    document.querySelectorAll('.available').forEach(btn => {
-        const showTime = new Date(btn.dataset.datetime);
-        const diffMinutes = (showTime - now) / (1000 * 60);
-        const availableSeats = parseInt(btn.dataset.available, 10);
-
-        // Case 1: Show is sold out
-        if (availableSeats === 0) {
-            btn.disabled = true;
-            btn.classList.add('soldout');
-        }
-
-        // Case 2: Show starting within 15 mins
-        else if (diffMinutes <= 15 && diffMinutes > 0) {
-            btn.disabled = true;
-            btn.classList.add('soldout');
-        }
-
-        // Case 3: Show already started
-        else if (diffMinutes <= 0) {
-            btn.disabled = true;
-            btn.classList.add('soldout');
-        }
-    });
-});
-
-
-window.addEventListener("pageshow", function (event) {
-    // Only block back if payment has finished
-    if (sessionStorage.getItem("paymentDone") === "true") {
-        if (event.persisted || 
-            (window.performance && window.performance.getEntriesByType("navigation")[0].type === "back_forward")) {
-            window.location.replace("/");
-        }
-    }
-});
-
-
-
+        window.addEventListener("pageshow", function (event) {
+            if (sessionStorage.getItem("paymentDone") === "true") {
+                if (event.persisted || 
+                    (window.performance && window.performance.getEntriesByType("navigation")[0].type === "back_forward")) {
+                    window.location.replace("/");
+                }
+            }
+        });
     </script>
-
 </body>
 </html>

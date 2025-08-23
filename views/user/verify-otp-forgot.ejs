@@ -191,7 +191,7 @@
             const form = document.getElementById('otp-form');
 
             try {
-                const response = await fetch('/verify-otp', {
+                const response = await fetch('/verify-otp-forgot', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -215,7 +215,7 @@
                         timer: 1500
                     })
                     .then(() => {
-                        window.location.href = '/';
+                        window.location.href = '/reset-password';
                     });
                 } else {
                     Swal.fire({
@@ -242,9 +242,8 @@
         async function resendOTP() {
             document.getElementById('resend-btn').disabled = true; // Disable resend button
             document.getElementById('resend-btn').innerText = "Resending..."; // Change button text
-
             try {
-                const response = await fetch('/resend-otp', {
+                const response = await fetch('/resend-otp-forgot', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
